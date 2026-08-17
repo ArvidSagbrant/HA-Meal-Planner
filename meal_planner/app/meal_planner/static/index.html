@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#2f6d57">
+    <title>Meal Planner</title>
+    <link rel="stylesheet" href="./styles.css">
+    <script type="module" src="./app.js"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow" data-i18n="app.subtitle"></p>
+        <h1 data-i18n="app.title"></h1>
+      </div>
+      <div class="topbar__actions">
+        <label class="language-picker">
+          <span data-i18n="language.label"></span>
+          <select id="language-select" data-i18n-aria-label="language.label">
+            <option value="en">English</option>
+            <option value="sv">Svenska</option>
+          </select>
+        </label>
+        <button class="button button--primary" id="add-meal" type="button" data-i18n="meals.add"></button>
+      </div>
+    </header>
+
+    <main>
+      <section class="week-section" aria-labelledby="week-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow" data-i18n="week.eyebrow"></p>
+            <h2 id="week-heading"></h2>
+          </div>
+          <nav class="week-navigation" data-i18n-aria-label="week.navigation">
+            <button class="icon-button" id="previous-week" type="button" data-i18n-title="week.previous">←</button>
+            <button class="button" id="current-week" type="button" data-i18n="week.current"></button>
+            <button class="icon-button" id="next-week" type="button" data-i18n-title="week.next">→</button>
+          </nav>
+        </div>
+        <div class="week-grid" id="week-grid" aria-live="polite"></div>
+      </section>
+
+      <section class="meal-section" aria-labelledby="meals-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow" data-i18n="meals.eyebrow"></p>
+            <h2 id="meals-heading" data-i18n="meals.title"></h2>
+          </div>
+          <label class="search-field">
+            <span class="sr-only" data-i18n="meals.search"></span>
+            <input id="meal-search" type="search" data-i18n-placeholder="meals.search">
+          </label>
+        </div>
+        <div class="meal-list" id="meal-list" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <dialog id="meal-dialog">
+      <form id="meal-form" method="dialog">
+        <div class="dialog-heading">
+          <h2 id="meal-dialog-title"></h2>
+          <button class="icon-button" id="close-dialog" type="button" data-i18n-title="common.close">×</button>
+        </div>
+        <input id="meal-id" type="hidden">
+        <label>
+          <span data-i18n="meal.name"></span>
+          <input id="meal-name" maxlength="120" required>
+        </label>
+        <label>
+          <span data-i18n="meal.description"></span>
+          <textarea id="meal-description" rows="3" maxlength="4000"></textarea>
+        </label>
+        <div class="form-grid">
+          <label>
+            <span data-i18n="meal.type"></span>
+            <input id="meal-type" value="dinner" maxlength="80" required>
+          </label>
+          <label>
+            <span data-i18n="meal.protein"></span>
+            <input id="meal-protein" value="other" maxlength="80" required>
+          </label>
+          <label>
+            <span data-i18n="meal.preference"></span>
+            <select id="meal-preference">
+              <option value="1">1</option><option value="2">2</option><option value="3" selected>3</option>
+              <option value="4">4</option><option value="5">5</option>
+            </select>
+          </label>
+          <label>
+            <span data-i18n="meal.effort"></span>
+            <select id="meal-effort">
+              <option value="1">1</option><option value="2">2</option><option value="3" selected>3</option>
+              <option value="4">4</option><option value="5">5</option>
+            </select>
+          </label>
+        </div>
+        <label>
+          <span data-i18n="meal.tags"></span>
+          <input id="meal-tags" data-i18n-placeholder="meal.tagsPlaceholder">
+        </label>
+        <label class="checkbox-label">
+          <input id="meal-excluded" type="checkbox">
+          <span data-i18n="meal.excluded"></span>
+        </label>
+        <p class="form-error" id="form-error" role="alert"></p>
+        <div class="dialog-actions">
+          <button class="button" id="cancel-dialog" type="button" data-i18n="common.cancel"></button>
+          <button class="button button--primary" type="submit" data-i18n="common.save"></button>
+        </div>
+      </form>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>

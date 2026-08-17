@@ -1,0 +1,8 @@
+configuration:
+  language:
+    name: Språk
+    description: Språket som används i Måltidsplanerarens gränssnitt.
+  log_level:
+    name: Loggnivå
+    description: Lägsta allvarlighetsgrad som skrivs till tilläggsloggen.
+
