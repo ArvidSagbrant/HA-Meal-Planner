@@ -19,6 +19,11 @@ def get_week(week_start: date, service: PlanServiceDependency) -> WeeklyPlan:
     return service.get_week(week_start)
 
 
+@router.post("/{week_start}/generate", response_model=WeeklyPlan)
+def generate_week(week_start: date, service: PlanServiceDependency) -> WeeklyPlan:
+    return service.generate_week(week_start)
+
+
 @router.put("/{week_start}/days/{meal_date}", response_model=WeeklyPlan)
 def assign_meal(
     week_start: date,
@@ -35,3 +40,9 @@ def clear_meal(
 ) -> WeeklyPlan:
     return service.clear_meal(week_start, meal_date)
 
+
+@router.post("/{week_start}/days/{meal_date}/regenerate", response_model=WeeklyPlan)
+def regenerate_day(
+    week_start: date, meal_date: date, service: PlanServiceDependency
+) -> WeeklyPlan:
+    return service.regenerate_day(week_start, meal_date)

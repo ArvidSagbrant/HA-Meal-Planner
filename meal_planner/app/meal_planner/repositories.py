@@ -187,6 +187,71 @@ class PlanRepository:
             ).fetchall()
         return [dict(row) for row in rows]
 
+    def get_last_used(self, before_week_start: date) -> dict[str, date]:
+        with self.database.read() as connection:
+            rows = connection.execute(
+                """
+                SELECT pe.meal_id, MAX(pe.meal_date) AS last_used
+                FROM plan_entries pe
+                WHERE pe.meal_id IS NOT NULL AND pe.meal_date < ?
+                GROUP BY pe.meal_id
+                """,
+                (before_week_start.isoformat(),),
+            ).fetchall()
+        return {
+            row["meal_id"]: date.fromisoformat(row["last_used"])
+            for row in rows
+        }
+
+    def replace_generated(
+        self, week_start: date, assignments: dict[date, str]
+    ) -> None:
+        self.ensure_week(week_start)
+        now = utc_now()
+        with self.database.transaction() as connection:
+            plan_id = connection.execute(
+                "SELECT id FROM weekly_plans WHERE week_start = ?",
+                (week_start.isoformat(),),
+            ).fetchone()["id"]
+            for meal_date, meal_id in assignments.items():
+                connection.execute(
+                    """
+                    UPDATE plan_entries
+                    SET meal_id = ?, assignment_type = 'generated',
+                        is_manual_override = 0, updated_at = ?
+                    WHERE plan_id = ? AND meal_date = ? AND is_manual_override = 0
+                    """,
+                    (meal_id, now, plan_id, meal_date.isoformat()),
+                )
+            connection.execute(
+                "UPDATE weekly_plans SET updated_at = ? WHERE id = ?",
+                (now, plan_id),
+            )
+
+    def assign_generated(
+        self, week_start: date, meal_date: date, meal_id: str
+    ) -> None:
+        self.ensure_week(week_start)
+        now = utc_now()
+        with self.database.transaction() as connection:
+            cursor = connection.execute(
+                """
+                UPDATE plan_entries
+                SET meal_id = ?, assignment_type = 'generated',
+                    is_manual_override = 0, updated_at = ?
+                WHERE plan_id = (
+                    SELECT id FROM weekly_plans WHERE week_start = ?
+                ) AND meal_date = ? AND is_manual_override = 0
+                """,
+                (meal_id, now, week_start.isoformat(), meal_date.isoformat()),
+            )
+            if cursor.rowcount != 1:
+                raise RuntimeError("Expected one generated plan day to be updated")
+            connection.execute(
+                "UPDATE weekly_plans SET updated_at = ? WHERE week_start = ?",
+                (now, week_start.isoformat()),
+            )
+
     def assign(self, week_start: date, meal_date: date, meal_id: str) -> None:
         self.ensure_week(week_start)
         now = utc_now()

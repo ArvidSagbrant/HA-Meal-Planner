@@ -15,7 +15,13 @@ from . import __version__
 from .api.routes import meals, plans, system
 from .config import Settings
 from .container import Container
-from .errors import ConflictError, InvalidOperationError, MealPlannerError, NotFoundError
+from .errors import (
+    ConflictError,
+    InvalidOperationError,
+    MealPlannerError,
+    NotFoundError,
+    PlanningError,
+)
 from .middleware import NormalizeIngressPathMiddleware
 
 
@@ -68,7 +74,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     ) -> JSONResponse:
         if isinstance(error, NotFoundError):
             status_code = status.HTTP_404_NOT_FOUND
-        elif isinstance(error, ConflictError):
+        elif isinstance(error, (ConflictError, PlanningError)):
             status_code = status.HTTP_409_CONFLICT
         elif isinstance(error, InvalidOperationError):
             status_code = status.HTTP_400_BAD_REQUEST

@@ -2,10 +2,10 @@
   "app": { "title": "Meal Planner", "subtitle": "Home Assistant add-on" },
   "language": { "label": "Language" },
   "common": { "save": "Save", "cancel": "Cancel", "close": "Close", "edit": "Edit", "delete": "Delete", "none": "No meal selected" },
-  "week": { "eyebrow": "Weekly plan", "navigation": "Week navigation", "previous": "Previous week", "next": "Next week", "current": "This week" },
+  "week": { "eyebrow": "Weekly plan", "navigation": "Week navigation", "previous": "Previous week", "next": "Next week", "current": "This week", "generate": "Generate week", "regenerate": "Regenerate week", "regenerateDay": "Regenerate", "manual": "Manual", "generated": "Generated" },
   "meals": { "eyebrow": "Meal database", "title": "Meals", "add": "Add meal", "search": "Search meals", "empty": "No meals yet. Add the first one to start planning.", "noResults": "No meals match your search." },
   "meal": { "addTitle": "Add meal", "editTitle": "Edit meal", "name": "Name", "description": "Description", "type": "Meal type", "protein": "Protein/source", "preference": "Preference (1–5)", "effort": "Cooking effort (1–5)", "tags": "Tags", "tagsPlaceholder": "quick, family favourite", "excluded": "Exclude from automatic planning", "meta": "Preference {preference} · Effort {effort} · {protein}", "deleteConfirm": "Delete {name}? Existing plan assignments will be cleared." },
-  "status": { "saved": "Meal saved", "deleted": "Meal deleted", "assigned": "Plan updated", "error": "Something went wrong. Please try again." },
-  "errors": { "ConflictError": "A meal with this name already exists.", "NotFoundError": "The requested item no longer exists.", "InvalidOperationError": "This operation is not valid for the selected week." },
+  "status": { "saved": "Meal saved", "deleted": "Meal deleted", "assigned": "Plan updated", "generated": "Week generated", "regeneratedDay": "Meal regenerated", "error": "Something went wrong. Please try again." },
+  "errors": { "ConflictError": "A meal with this name already exists.", "DuplicateAssignmentError": "A meal can only be used once in the same week.", "PlanningError": "The plan could not be generated. Check that enough eligible meals exist and review the repeat settings.", "NotFoundError": "The requested item no longer exists.", "InvalidOperationError": "This operation is not valid for the selected week." },
   "days": { "monday": "Monday", "tuesday": "Tuesday", "wednesday": "Wednesday", "thursday": "Thursday", "friday": "Friday", "saturday": "Saturday", "sunday": "Sunday" }
 }

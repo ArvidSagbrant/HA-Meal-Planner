@@ -33,11 +33,14 @@
             <p class="eyebrow" data-i18n="week.eyebrow"></p>
             <h2 id="week-heading"></h2>
           </div>
-          <nav class="week-navigation" data-i18n-aria-label="week.navigation">
-            <button class="icon-button" id="previous-week" type="button" data-i18n-title="week.previous">←</button>
-            <button class="button" id="current-week" type="button" data-i18n="week.current"></button>
-            <button class="icon-button" id="next-week" type="button" data-i18n-title="week.next">→</button>
-          </nav>
+          <div class="week-controls">
+            <button class="button button--primary" id="generate-week" type="button"></button>
+            <nav class="week-navigation" data-i18n-aria-label="week.navigation">
+              <button class="icon-button" id="previous-week" type="button" data-i18n-title="week.previous">←</button>
+              <button class="button" id="current-week" type="button" data-i18n="week.current"></button>
+              <button class="icon-button" id="next-week" type="button" data-i18n-title="week.next">→</button>
+            </nav>
+          </div>
         </div>
         <div class="week-grid" id="week-grid" aria-live="polite"></div>
       </section>

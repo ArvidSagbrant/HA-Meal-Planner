@@ -13,6 +13,13 @@ class ConflictError(MealPlannerError):
     pass
 
 
+class DuplicateAssignmentError(ConflictError):
+    pass
+
+
 class InvalidOperationError(MealPlannerError):
     pass
 
+
+class PlanningError(MealPlannerError):
+    pass

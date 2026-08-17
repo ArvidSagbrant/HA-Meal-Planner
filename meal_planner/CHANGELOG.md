@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.0
+
+- Add deterministic, score-based full-week generation.
+- Preserve manual overrides while generating and prevent duplicate weekly meals.
+- Use historical plans and configurable repeat avoidance during generation.
+- Add configurable preference, recency, effort, variety, and vegetarian scoring.
+- Add single-day regeneration without changing the rest of the week.
+
 ## 0.1.1
 
 - Normalize duplicate leading slashes added by Home Assistant Ingress so API
