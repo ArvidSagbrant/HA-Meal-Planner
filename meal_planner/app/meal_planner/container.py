@@ -6,6 +6,7 @@ from .ai import AIService, build_ai_provider
 from .config import Settings
 from .database import Database
 from .events import ChangeNotifier
+from .images import MealImageStore
 from .mqtt import MqttIntegration
 from .planner import DeterministicPlanner
 from .repositories import MealRepository, PlanRepository
@@ -30,7 +31,11 @@ class Container:
         plan_repository = PlanRepository(database)
         planner = DeterministicPlanner(settings.planner)
         changes = ChangeNotifier()
-        meals = MealService(meal_repository, changes.notify)
+        meals = MealService(
+            meal_repository,
+            MealImageStore(settings.data_dir),
+            changes.notify,
+        )
         ai = AIService(
             settings.ai,
             build_ai_provider(settings.ai),

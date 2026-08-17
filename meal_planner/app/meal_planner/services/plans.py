@@ -163,6 +163,7 @@ class PlanService:
                 protein_source=item["protein_source"],
                 is_vegetarian=item["is_vegetarian"],
                 tags=tuple(item["tags"]),
+                nutrition=item["nutrition"],
                 excluded=item["excluded"],
             )
             for item in items

@@ -10,7 +10,7 @@ from pathlib import Path
 from .catalog import infer_legacy_vegetarian, normalize_legacy_protein_source
 
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 
 class Database:
@@ -31,9 +31,21 @@ class Database:
             if current_version == 0:
                 self._create_schema(connection)
                 connection.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
-            elif current_version < 2:
-                self._migrate_v1_to_v2(connection)
-                connection.execute("PRAGMA user_version = 2")
+                return
+
+            migrations = {
+                1: self._migrate_v1_to_v2,
+                2: self._migrate_v2_to_v3,
+            }
+            while current_version < SCHEMA_VERSION:
+                migration = migrations.get(current_version)
+                if migration is None:
+                    raise RuntimeError(
+                        f"No migration is available for schema {current_version}"
+                    )
+                migration(connection)
+                current_version += 1
+                connection.execute(f"PRAGMA user_version = {current_version}")
 
     def connect(self) -> sqlite3.Connection:
         connection = sqlite3.connect(self.path, timeout=10)
@@ -75,6 +87,8 @@ class Database:
                 preference INTEGER NOT NULL DEFAULT 3 CHECK (preference BETWEEN 1 AND 5),
                 cooking_effort INTEGER NOT NULL DEFAULT 3 CHECK (cooking_effort BETWEEN 1 AND 5),
                 image_path TEXT,
+                image_mime_type TEXT,
+                image_size_bytes INTEGER CHECK (image_size_bytes IS NULL OR image_size_bytes >= 0),
                 meal_type TEXT NOT NULL DEFAULT 'dinner',
                 protein_source TEXT NOT NULL DEFAULT 'other',
                 is_vegetarian INTEGER NOT NULL DEFAULT 0 CHECK (is_vegetarian IN (0, 1)),
@@ -143,3 +157,14 @@ class Database:
                     row["id"],
                 ),
             )
+
+    @staticmethod
+    def _migrate_v2_to_v3(connection: sqlite3.Connection) -> None:
+        connection.execute("ALTER TABLE meals ADD COLUMN image_mime_type TEXT")
+        connection.execute(
+            """
+            ALTER TABLE meals
+            ADD COLUMN image_size_bytes INTEGER
+            CHECK (image_size_bytes IS NULL OR image_size_bytes >= 0)
+            """
+        )

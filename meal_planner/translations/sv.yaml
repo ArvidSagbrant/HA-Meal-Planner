@@ -23,6 +23,15 @@ configuration:
   variety_weight:
     name: Variationsvikt
     description: Hur mycket protein-, tagg- och vegetarisk variation påverkar.
+  nutrition_weight:
+    name: Näringsvikt
+    description: Hur mycket känd energi, protein, fibrer och näringsvariation påverkar.
+  calorie_target_kcal:
+    name: Kalorimål
+    description: Önskad energi per portion i kcal; ange 0 för att stänga av målet.
+  max_consecutive_protein_source:
+    name: Högst antal samma proteinkälla i följd
+    description: Hård gräns för genererade måltider med samma protein/källa i följd; 7 stänger av den.
   weekday_effort_target:
     name: Insatsmål för vardagar
     description: Önskad tillagningsinsats från 1 till 5 på vardagar.

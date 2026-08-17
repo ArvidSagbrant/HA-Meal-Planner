@@ -142,6 +142,18 @@ class Settings:
                 variety_weight=float(
                     os.getenv("MEAL_PLANNER_VARIETY_WEIGHT", "1.0")
                 ),
+                nutrition_weight=float(
+                    os.getenv("MEAL_PLANNER_NUTRITION_WEIGHT", "0.5")
+                ),
+                calorie_target_kcal=int(
+                    os.getenv("MEAL_PLANNER_CALORIE_TARGET_KCAL", "600")
+                ),
+                max_consecutive_protein_source=int(
+                    os.getenv(
+                        "MEAL_PLANNER_MAX_CONSECUTIVE_PROTEIN_SOURCE",
+                        "7",
+                    )
+                ),
                 weekday_effort_target=int(
                     os.getenv("MEAL_PLANNER_WEEKDAY_EFFORT_TARGET", "2")
                 ),

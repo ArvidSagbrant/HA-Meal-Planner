@@ -40,6 +40,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             format="%(asctime)s %(levelname)s %(name)s: %(message)s",
         )
         container.database.initialize()
+        container.meals.prune_images()
         container.mqtt.start()
         LOGGER.info("Meal Planner %s started", __version__)
         try:

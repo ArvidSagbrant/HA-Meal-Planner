@@ -25,6 +25,10 @@ class InvalidOperationError(MealPlannerError):
     pass
 
 
+class ImageValidationError(InvalidOperationError):
+    pass
+
+
 class PlanningError(MealPlannerError):
     pass
 

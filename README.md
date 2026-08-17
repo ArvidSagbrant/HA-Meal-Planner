@@ -2,8 +2,9 @@
 
 Meal Planner is a Home Assistant add-on for maintaining a meal database and
 building persistent weekly plans. It provides a responsive Ingress UI, meal
-CRUD, manual overrides, deterministic plan generation based on meal history and
-preferences, cooked-meal tracking, and English/Swedish localization.
+CRUD with locally stored images and nutrition, manual overrides, deterministic
+plan generation based on meal history and preferences, cooked-meal tracking,
+and English/Swedish localization.
 
 ## Install in Home Assistant
 
@@ -40,6 +41,7 @@ The API documentation is available at `/api/docs`. Important endpoints are:
 
 - `GET/POST /api/meals`
 - `GET/PATCH/DELETE /api/meals/{meal_id}`
+- `GET/PUT/DELETE /api/meals/{meal_id}/image`
 - `GET /api/plans/{monday}`
 - `POST /api/plans/{monday}/generate`
 - `PUT/DELETE /api/plans/{monday}/days/{date}`
@@ -52,6 +54,10 @@ The API documentation is available at `/api/docs`. Important endpoints are:
 The add-on automatically uses Home Assistant's Supervisor-provided MQTT service
 when available. MQTT Discovery creates stable today and tomorrow sensors; an
 external broker or disabled MQTT can be selected in the add-on configuration.
+
+Meal images are signature-validated PNG, JPEG, GIF, or WebP files up to 5 MB.
+They are stored beneath `/data/images`, served only through the meal API, and
+removed when replaced, explicitly cleared, or when their meal is deleted.
 
 Optional AI assistance supports OpenAI's Responses API and a local llama.cpp
 OpenAI-compatible server. Deterministic generation remains authoritative: every

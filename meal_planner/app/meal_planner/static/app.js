@@ -8,6 +8,7 @@ const state = {
   mqttStatus: null,
   plan: null,
   proteinSources: [],
+  removeImage: false,
   weekStart: mondayFor(new Date()),
 };
 
@@ -30,6 +31,9 @@ const elements = {
   suggestionsError: document.querySelector("#suggestions-error"),
   suggestionList: document.querySelector("#suggestion-list"),
   generateSuggestions: document.querySelector("#generate-suggestions"),
+  imageInput: document.querySelector("#meal-image"),
+  imagePreview: document.querySelector("#meal-image-preview"),
+  removeImage: document.querySelector("#remove-meal-image"),
 };
 
 function mondayFor(value) {
@@ -69,9 +73,13 @@ function t(key, variables = {}) {
 }
 
 async function api(path, options = {}) {
+  const headers = { ...options.headers };
+  if (options.body && !(options.body instanceof Blob) && !headers["Content-Type"]) {
+    headers["Content-Type"] = "application/json";
+  }
   const response = await fetch(new URL(`api/${path}`, rootUrl), {
     ...options,
-    headers: { "Content-Type": "application/json", ...options.headers },
+    headers,
   });
   if (!response.ok) {
     const payload = await response.json().catch(() => ({}));
@@ -130,6 +138,22 @@ function localizedError(error) {
 
 function proteinLabel(source) {
   return t(`proteinSources.${source}`);
+}
+
+function mealImageUrl(meal) {
+  if (!meal?.image_path) return "";
+  const url = new URL(`api/meals/${meal.id}/image`, rootUrl);
+  url.searchParams.set("v", meal.updated_at);
+  return url.href;
+}
+
+function nutritionSummary(meal) {
+  const nutrition = meal?.nutrition || {};
+  const parts = [];
+  if (nutrition.calories_kcal != null) parts.push(t("nutrition.calorieValue", { value: nutrition.calories_kcal }));
+  if (nutrition.protein_g != null) parts.push(t("nutrition.proteinValue", { value: nutrition.protein_g }));
+  if (nutrition.fiber_g != null) parts.push(t("nutrition.fiberValue", { value: nutrition.fiber_g }));
+  return parts.join(" · ");
 }
 
 function renderProteinOptions() {
@@ -195,6 +219,14 @@ function renderWeek() {
         new Intl.DateTimeFormat(locale, { day: "numeric", month: "long" }).format(parseDate(day.date)),
       ),
     );
+
+    if (day.meal?.image_path) {
+      const image = element("img", "day-card__image");
+      image.src = mealImageUrl(day.meal);
+      image.alt = "";
+      image.loading = "lazy";
+      card.append(image);
+    }
 
     const select = element("select");
     select.setAttribute("aria-label", `${t(`days.${dayKeys[index]}`)} — ${t("common.none")}`);
@@ -262,7 +294,15 @@ function renderMeals() {
 
   meals.forEach((meal) => {
     const card = element("article", "meal-card");
+    if (meal.image_path) {
+      const image = element("img", "meal-card__image");
+      image.src = mealImageUrl(meal);
+      image.alt = meal.name;
+      image.loading = "lazy";
+      card.append(image);
+    }
     const copy = element("div");
+    copy.className = "meal-card__copy";
     copy.append(
       element("h3", "", meal.name),
       element(
@@ -275,6 +315,8 @@ function renderMeals() {
         }),
       ),
     );
+    const nutrition = nutritionSummary(meal);
+    if (nutrition) copy.append(element("p", "meal-card__nutrition", nutrition));
     const actions = element("div", "meal-card__actions");
     const editButton = element("button", "button", t("common.edit"));
     editButton.type = "button";
@@ -438,6 +480,15 @@ function openMealDialog(meal = null) {
   document.querySelector("#meal-tags").value = meal?.tags.join(", ") ?? "";
   document.querySelector("#meal-vegetarian").checked = meal?.is_vegetarian ?? false;
   document.querySelector("#meal-excluded").checked = meal?.excluded ?? false;
+  document.querySelector("#nutrition-calories").value = meal?.nutrition?.calories_kcal ?? "";
+  document.querySelector("#nutrition-protein").value = meal?.nutrition?.protein_g ?? "";
+  document.querySelector("#nutrition-carbohydrates").value = meal?.nutrition?.carbohydrates_g ?? "";
+  document.querySelector("#nutrition-fat").value = meal?.nutrition?.fat_g ?? "";
+  document.querySelector("#nutrition-fiber").value = meal?.nutrition?.fiber_g ?? "";
+  state.removeImage = false;
+  elements.imagePreview.src = mealImageUrl(meal);
+  elements.imagePreview.hidden = !meal?.image_path;
+  elements.removeImage.hidden = !meal?.image_path;
   elements.dialogTitle.textContent = t(meal ? "meal.editTitle" : "meal.addTitle");
   elements.dialog.showModal();
   document.querySelector("#meal-name").focus();
@@ -446,6 +497,17 @@ function openMealDialog(meal = null) {
 async function saveMeal(event) {
   event.preventDefault();
   const mealId = document.querySelector("#meal-id").value;
+  const nutrition = {};
+  [
+    ["calories_kcal", "#nutrition-calories"],
+    ["protein_g", "#nutrition-protein"],
+    ["carbohydrates_g", "#nutrition-carbohydrates"],
+    ["fat_g", "#nutrition-fat"],
+    ["fiber_g", "#nutrition-fiber"],
+  ].forEach(([key, selector]) => {
+    const value = document.querySelector(selector).value;
+    if (value !== "") nutrition[key] = Number(value);
+  });
   const payload = {
     name: document.querySelector("#meal-name").value,
     description: document.querySelector("#meal-description").value,
@@ -455,13 +517,25 @@ async function saveMeal(event) {
     preference: Number(document.querySelector("#meal-preference").value),
     cooking_effort: Number(document.querySelector("#meal-effort").value),
     tags: document.querySelector("#meal-tags").value.split(",").map((tag) => tag.trim()).filter(Boolean),
+    nutrition,
     excluded: document.querySelector("#meal-excluded").checked,
   };
   try {
-    await api(mealId ? `meals/${mealId}` : "meals", {
+    let saved = await api(mealId ? `meals/${mealId}` : "meals", {
       method: mealId ? "PATCH" : "POST",
       body: JSON.stringify(payload),
     });
+    if (state.removeImage && saved.image_path) {
+      saved = await api(`meals/${saved.id}/image`, { method: "DELETE" });
+    }
+    const image = elements.imageInput.files[0];
+    if (image) {
+      saved = await api(`meals/${saved.id}/image`, {
+        method: "PUT",
+        headers: { "Content-Type": image.type || "application/octet-stream" },
+        body: image,
+      });
+    }
     elements.dialog.close();
     state.meals = await api("meals");
     await loadWeek();
@@ -501,6 +575,21 @@ function bindEvents() {
     elements.suggestionsDialog.close();
   });
   elements.generateSuggestions.addEventListener("click", requestSuggestions);
+  elements.imageInput.addEventListener("change", () => {
+    const image = elements.imageInput.files[0];
+    if (!image) return;
+    elements.imagePreview.src = URL.createObjectURL(image);
+    elements.imagePreview.hidden = false;
+    elements.removeImage.hidden = false;
+    state.removeImage = false;
+  });
+  elements.removeImage.addEventListener("click", () => {
+    elements.imageInput.value = "";
+    elements.imagePreview.removeAttribute("src");
+    elements.imagePreview.hidden = true;
+    elements.removeImage.hidden = true;
+    state.removeImage = true;
+  });
   document.querySelector("#close-dialog").addEventListener("click", () => elements.dialog.close());
   document.querySelector("#cancel-dialog").addEventListener("click", () => elements.dialog.close());
   elements.form.addEventListener("submit", saveMeal);

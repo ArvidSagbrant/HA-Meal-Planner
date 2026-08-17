@@ -37,9 +37,10 @@ class MealRepository:
                 """
                 INSERT INTO meals (
                     id, name, description, preference, cooking_effort, image_path,
-                    meal_type, protein_source, is_vegetarian, tags_json,
+                    image_mime_type, image_size_bytes, meal_type, protein_source,
+                    is_vegetarian, tags_json,
                     nutrition_json, excluded, created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     meal_id,
@@ -48,6 +49,8 @@ class MealRepository:
                     serialized["preference"],
                     serialized["cooking_effort"],
                     serialized["image_path"],
+                    serialized["image_mime_type"],
+                    serialized["image_size_bytes"],
                     serialized["meal_type"],
                     serialized["protein_source"],
                     serialized["is_vegetarian"],
@@ -106,8 +109,13 @@ class MealRepository:
         if "tags" in result:
             result["tags_json"] = json.dumps(result.pop("tags"), separators=(",", ":"))
         if "nutrition" in result:
+            nutrition = {
+                key: value
+                for key, value in result.pop("nutrition").items()
+                if value is not None
+            }
             result["nutrition_json"] = json.dumps(
-                result.pop("nutrition"), separators=(",", ":"), sort_keys=True
+                nutrition, separators=(",", ":"), sort_keys=True
             )
         if "excluded" in result:
             result["excluded"] = int(result["excluded"])
@@ -118,6 +126,8 @@ class MealRepository:
             result.setdefault("preference", 3)
             result.setdefault("cooking_effort", 3)
             result.setdefault("image_path", None)
+            result.setdefault("image_mime_type", None)
+            result.setdefault("image_size_bytes", None)
             result.setdefault("meal_type", "dinner")
             result.setdefault("protein_source", "other")
             result.setdefault("is_vegetarian", 0)
@@ -135,6 +145,8 @@ class MealRepository:
             "preference": row["preference"],
             "cooking_effort": row["cooking_effort"],
             "image_path": row["image_path"],
+            "image_mime_type": row["image_mime_type"],
+            "image_size_bytes": row["image_size_bytes"],
             "meal_type": row["meal_type"],
             "protein_source": row["protein_source"],
             "is_vegetarian": bool(row["is_vegetarian"]),

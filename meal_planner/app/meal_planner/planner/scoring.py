@@ -27,6 +27,7 @@ class MealScorer:
         score += self._effort_score(meal, meal_date)
         score += self._variety_score(meal, meal_date, assignments, meals_by_id)
         score += self._vegetarian_score(meal, meal_date, assignments, meals_by_id)
+        score += self._nutrition_score(meal, meal_date, assignments, meals_by_id)
         if previous_meal_id == meal.id:
             score -= 5.0 * max(self.settings.variety_weight, 0.5)
         return round(score, 6)
@@ -99,3 +100,48 @@ class MealScorer:
         if meal.is_vegetarian and vegetarian_count >= target:
             return -1.5 * self.settings.variety_weight
         return 0.0
+
+    def _nutrition_score(
+        self,
+        meal: MealCandidate,
+        meal_date: date,
+        assignments: dict[date, str],
+        meals_by_id: dict[str, MealCandidate],
+    ) -> float:
+        if not meal.nutrition or self.settings.nutrition_weight == 0:
+            return 0.0
+        nutrition = meal.nutrition
+        score = 0.0
+        calories = nutrition.get("calories_kcal")
+        target = self.settings.calorie_target_kcal
+        if calories is not None and target > 0:
+            score += max(-2.0, 2.0 - abs(calories - target) / target * 4.0)
+        protein = nutrition.get("protein_g")
+        if protein is not None:
+            score += min(protein / 25.0, 1.0)
+        fiber = nutrition.get("fiber_g")
+        if fiber is not None:
+            score += min(fiber / 8.0, 1.0)
+
+        for neighbor_date in (
+            meal_date - timedelta(days=1),
+            meal_date + timedelta(days=1),
+        ):
+            neighbor_id = assignments.get(neighbor_date)
+            if not neighbor_id:
+                continue
+            neighbor = meals_by_id[neighbor_id].nutrition
+            comparable = 0
+            similar = 0
+            for key, tolerance in (
+                ("calories_kcal", 75.0),
+                ("protein_g", 5.0),
+                ("fiber_g", 2.0),
+            ):
+                if key not in nutrition or key not in neighbor:
+                    continue
+                comparable += 1
+                similar += abs(nutrition[key] - neighbor[key]) <= tolerance
+            if comparable >= 2 and similar == comparable:
+                score -= 0.75
+        return score * self.settings.nutrition_weight

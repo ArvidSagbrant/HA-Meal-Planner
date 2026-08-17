@@ -13,17 +13,26 @@ from .catalog import ProteinSource
 NonEmptyName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=120)]
 
 
+class NutritionInfo(BaseModel):
+    """Optional per-serving nutrition used by the planner and UI."""
+
+    calories_kcal: float | None = Field(default=None, ge=0, le=10000)
+    protein_g: float | None = Field(default=None, ge=0, le=1000)
+    carbohydrates_g: float | None = Field(default=None, ge=0, le=1000)
+    fat_g: float | None = Field(default=None, ge=0, le=1000)
+    fiber_g: float | None = Field(default=None, ge=0, le=1000)
+
+
 class MealBase(BaseModel):
     name: NonEmptyName
     description: str = Field(default="", max_length=4000)
     preference: int = Field(default=3, ge=1, le=5)
     cooking_effort: int = Field(default=3, ge=1, le=5)
-    image_path: str | None = Field(default=None, max_length=500)
     meal_type: str = Field(default="dinner", min_length=1, max_length=80)
     protein_source: ProteinSource = ProteinSource.OTHER
     is_vegetarian: bool = False
     tags: list[str] = Field(default_factory=list)
-    nutrition: dict[str, float] = Field(default_factory=dict)
+    nutrition: NutritionInfo = Field(default_factory=NutritionInfo)
     excluded: bool = False
 
     @field_validator("tags")
@@ -49,12 +58,11 @@ class MealUpdate(BaseModel):
     description: str | None = Field(default=None, max_length=4000)
     preference: int | None = Field(default=None, ge=1, le=5)
     cooking_effort: int | None = Field(default=None, ge=1, le=5)
-    image_path: str | None = Field(default=None, max_length=500)
     meal_type: str | None = Field(default=None, min_length=1, max_length=80)
     protein_source: ProteinSource | None = None
     is_vegetarian: bool | None = None
     tags: list[str] | None = None
-    nutrition: dict[str, float] | None = None
+    nutrition: NutritionInfo | None = None
     excluded: bool | None = None
 
     @field_validator("tags")
@@ -66,8 +74,7 @@ class MealUpdate(BaseModel):
 
     @model_validator(mode="after")
     def reject_null_for_required_fields(self) -> "MealUpdate":
-        nullable_fields = {"image_path"}
-        for field_name in self.model_fields_set - nullable_fields:
+        for field_name in self.model_fields_set:
             if getattr(self, field_name) is None:
                 raise ValueError(f"{field_name} cannot be null")
         return self
@@ -77,6 +84,9 @@ class Meal(MealBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: str
+    image_path: str | None = None
+    image_mime_type: str | None = None
+    image_size_bytes: int | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -110,6 +120,9 @@ class PlanningSettingsView(BaseModel):
     recency_weight: float
     effort_weight: float
     variety_weight: float
+    nutrition_weight: float
+    calorie_target_kcal: int
+    max_consecutive_protein_source: int
     weekday_effort_target: int
     weekend_effort_target: int
 

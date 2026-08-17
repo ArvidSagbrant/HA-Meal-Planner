@@ -124,6 +124,14 @@ section {
 .day-card--cooked { background: color-mix(in srgb, var(--primary) 9%, var(--surface)); }
 .day-card__weekday { font-size: .78rem; font-weight: 800; text-transform: uppercase; color: var(--primary); }
 .day-card__date { margin: 3px 0 18px; color: var(--text-muted); font-size: .86rem; }
+.day-card__image {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  margin-bottom: 12px;
+  border-radius: 11px;
+  object-fit: cover;
+  background: var(--surface-muted);
+}
 .day-card select { width: 100%; }
 .day-card__footer {
   display: flex;
@@ -148,8 +156,18 @@ button:disabled, select:disabled { cursor: not-allowed; opacity: .58; }
   padding: 16px;
   background: var(--surface);
 }
+.meal-card__image {
+  width: 96px;
+  height: 96px;
+  flex: 0 0 auto;
+  border-radius: 12px;
+  object-fit: cover;
+  background: var(--surface-muted);
+}
+.meal-card__copy { min-width: 0; flex: 1; }
 .meal-card h3 { margin: 0 0 5px; font-size: 1.06rem; }
 .meal-card p { color: var(--text-muted); font-size: .86rem; }
+.meal-card__nutrition { margin-top: 6px; font-weight: 700; }
 .meal-card__actions { display: flex; gap: 7px; }
 .meal-card__actions .button { padding-inline: 11px; }
 
@@ -177,6 +195,29 @@ dialog {
 dialog::backdrop { background: rgb(14 25 20 / 52%); backdrop-filter: blur(3px); }
 #meal-form { display: grid; gap: 16px; padding: 24px; }
 #meal-form label > span { display: block; margin-bottom: 6px; font-size: .84rem; font-weight: 750; }
+.image-editor {
+  display: grid;
+  grid-template-columns: minmax(150px, .7fr) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+.image-editor__preview {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 12px;
+  object-fit: cover;
+  background: var(--surface-muted);
+}
+.image-editor__controls { display: grid; gap: 9px; }
+.field-help { color: var(--text-muted); font-size: .78rem; line-height: 1.45; }
+.nutrition-fields {
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+}
+.nutrition-fields legend { padding-inline: 6px; font-size: .9rem; font-weight: 800; }
+.nutrition-fields__grid { margin-top: 12px; }
 .suggestions-dialog__content { display: grid; gap: 16px; padding: 24px; }
 .suggestions-dialog__intro { color: var(--text-muted); line-height: 1.5; }
 .suggestion-controls {
@@ -234,18 +275,48 @@ dialog::backdrop { background: rgb(14 25 20 / 52%); backdrop-filter: blur(3px); 
 }
 
 @media (max-width: 640px) {
+  .topbar, main { width: min(100% - 20px, 1180px); }
+  .topbar { gap: 14px; padding-top: 20px; }
   .topbar, .section-heading { align-items: stretch; flex-direction: column; }
-  .topbar__actions { flex-wrap: wrap; justify-content: space-between; }
+  .topbar__actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: stretch;
+  }
+  .mqtt-status { justify-content: center; }
+  .language-picker { justify-content: flex-end; }
+  #add-meal { grid-column: 1 / -1; }
   .week-navigation { display: grid; grid-template-columns: 42px 1fr 42px; }
   .week-controls { align-items: stretch; flex-direction: column; }
-  .meal-list, .week-grid, .form-grid, .checkbox-grid { grid-template-columns: 1fr; }
+  .meal-list, .form-grid, .checkbox-grid { grid-template-columns: 1fr; }
+  .week-grid {
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(82%, 360px);
+    grid-template-columns: none;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scroll-snap-type: inline mandatory;
+    scrollbar-width: thin;
+    padding: 3px 3px 10px;
+  }
+  .day-card { scroll-snap-align: start; }
   .meal-section__actions { align-items: stretch; flex-direction: column; }
   .suggestion-controls { grid-template-columns: 1fr; }
   .suggestion-card { align-items: flex-start; flex-direction: column; }
   .day-card:last-child { grid-column: auto; }
   .meal-card { align-items: flex-start; flex-direction: column; }
+  .meal-card__image { width: 100%; height: auto; aspect-ratio: 16 / 9; }
   .meal-card__actions { width: 100%; }
   .meal-card__actions .button { flex: 1; }
+  .image-editor { grid-template-columns: 1fr; }
+  dialog {
+    width: 100%;
+    max-width: none;
+    max-height: 92dvh;
+    margin: auto 0 0;
+    border-radius: 20px 20px 0 0;
+  }
+  #meal-form, .suggestions-dialog__content { padding: 20px 16px max(20px, env(safe-area-inset-bottom)); }
 }
 
 @media (prefers-color-scheme: dark) {

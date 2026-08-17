@@ -46,6 +46,9 @@ def test_v1_classifications_are_migrated_to_canonical_values(
             for row in migrated.execute("PRAGMA table_info(plan_entries)")
             if row["name"] == "is_cooked"
         )
+        meal_columns = {
+            row["name"] for row in migrated.execute("PRAGMA table_info(meals)")
+        }
 
     assert version == SCHEMA_VERSION
     assert meals == {
@@ -56,3 +59,27 @@ def test_v1_classifications_are_migrated_to_canonical_values(
         "unknown": ("other", False),
     }
     assert cooked_column["dflt_value"] == "0"
+    assert {"image_mime_type", "image_size_bytes"}.issubset(meal_columns)
+
+
+def test_v2_database_is_migrated_to_image_metadata_schema(tmp_path: Path) -> None:
+    database_path = tmp_path / "v2.db"
+    connection = sqlite3.connect(database_path)
+    connection.executescript(
+        """
+        CREATE TABLE meals (id TEXT PRIMARY KEY);
+        PRAGMA user_version = 2;
+        """
+    )
+    connection.commit()
+    connection.close()
+
+    database = Database(database_path)
+    database.initialize()
+
+    with database.read() as migrated:
+        assert migrated.execute("PRAGMA user_version").fetchone()[0] == SCHEMA_VERSION
+        columns = {
+            row["name"] for row in migrated.execute("PRAGMA table_info(meals)")
+        }
+    assert {"image_mime_type", "image_size_bytes"}.issubset(columns)

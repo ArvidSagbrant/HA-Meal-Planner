@@ -18,6 +18,9 @@ class PlannerSettings:
     recency_weight: float = 1.0
     effort_weight: float = 0.6
     variety_weight: float = 1.0
+    nutrition_weight: float = 0.5
+    calorie_target_kcal: int = 600
+    max_consecutive_protein_source: int = 7
     weekday_effort_target: int = 2
     weekend_effort_target: int = 4
 
@@ -31,6 +34,7 @@ class PlannerSettings:
             "recency_weight",
             "effort_weight",
             "variety_weight",
+            "nutrition_weight",
         ):
             if getattr(self, name) < 0:
                 raise ValueError(f"{name} cannot be negative")
@@ -38,6 +42,12 @@ class PlannerSettings:
             raise ValueError("weekday_effort_target must be between 1 and 5")
         if not 1 <= self.weekend_effort_target <= 5:
             raise ValueError("weekend_effort_target must be between 1 and 5")
+        if not 0 <= self.calorie_target_kcal <= 5000:
+            raise ValueError("calorie_target_kcal must be between 0 and 5000")
+        if not 1 <= self.max_consecutive_protein_source <= 7:
+            raise ValueError(
+                "max_consecutive_protein_source must be between 1 and 7"
+            )
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,6 +59,7 @@ class MealCandidate:
     protein_source: str
     is_vegetarian: bool = False
     tags: tuple[str, ...] = ()
+    nutrition: dict[str, float] = field(default_factory=dict)
     excluded: bool = False
 
 

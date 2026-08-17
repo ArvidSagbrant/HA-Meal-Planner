@@ -159,3 +159,37 @@ def test_openai_provider_requires_api_key_without_network_request() -> None:
             user_prompt="user",
             response_model=MealSuggestions,
         )
+
+
+def test_provider_surfaces_sanitized_upstream_error_detail() -> None:
+    provider = LlamaCppProvider(
+        AISettings(
+            provider="llamacpp",
+            base_url="http://llama.local/v1",
+            model="missing-model",
+        ),
+        httpx.Client(
+            transport=httpx.MockTransport(
+                lambda _request: httpx.Response(
+                    400,
+                    json={"error": {"message": "  model   not found  "}},
+                )
+            )
+        ),
+    )
+
+    with pytest.raises(AIProviderError, match="HTTP 400: model not found"):
+        provider.complete_structured(
+            system_prompt="system",
+            user_prompt="user",
+            response_model=MealSuggestions,
+        )
+
+
+def test_provider_error_detail_redacts_secret_like_values() -> None:
+    response = httpx.Response(
+        401,
+        json={"error": {"message": "API key: sk-secretvalue123 is invalid"}},
+    )
+
+    assert LlamaCppProvider._error_detail(response) == "API key: [redacted] is invalid"

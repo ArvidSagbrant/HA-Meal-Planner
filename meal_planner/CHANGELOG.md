@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.5.0
+
+- Add validated local PNG, JPEG, GIF, and WebP storage with upload, serving,
+  replacement, deletion, and orphan cleanup.
+- Add per-serving calorie, protein, carbohydrate, fat, and fibre fields.
+- Use known nutrition in deterministic scoring with configurable calorie and
+  nutrition weights.
+- Add a configurable hard limit for consecutive generated protein sources and
+  deterministic backtracking for complete constraint-safe weeks.
+- Add a forward-only v3 database migration for image metadata.
+- Improve the mobile week carousel, meal imagery, responsive editor, and
+  English/Swedish nutrition copy.
+- Include safe upstream AI error details in logs and expand backend coverage.
+
 ## 0.4.0
 
 - Add optional OpenAI Responses API and llama.cpp-compatible AI providers.
