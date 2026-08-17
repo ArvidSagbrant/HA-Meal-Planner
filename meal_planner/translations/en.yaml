@@ -1,0 +1,8 @@
+configuration:
+  language:
+    name: Language
+    description: Language used by the Meal Planner interface.
+  log_level:
+    name: Log level
+    description: Minimum severity written to the add-on log.
+

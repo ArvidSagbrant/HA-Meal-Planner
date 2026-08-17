@@ -1,0 +1,41 @@
+"""Runtime configuration loaded from Home Assistant add-on options."""
+
+from __future__ import annotations
+
+import os
+from dataclasses import dataclass
+from pathlib import Path
+
+
+SUPPORTED_LANGUAGES = {"en", "sv"}
+SUPPORTED_LOG_LEVELS = {"DEBUG", "INFO", "WARNING", "ERROR"}
+
+
+@dataclass(frozen=True, slots=True)
+class Settings:
+    data_dir: Path
+    language: str = "en"
+    log_level: str = "INFO"
+    ingress_only: bool = False
+
+    @property
+    def database_path(self) -> Path:
+        return self.data_dir / "meal_planner.db"
+
+    @classmethod
+    def from_environment(cls) -> "Settings":
+        language = os.getenv("MEAL_PLANNER_LANGUAGE", "en").lower()
+        log_level = os.getenv("MEAL_PLANNER_LOG_LEVEL", "INFO").upper()
+
+        if language not in SUPPORTED_LANGUAGES:
+            raise ValueError(f"Unsupported language: {language}")
+        if log_level not in SUPPORTED_LOG_LEVELS:
+            raise ValueError(f"Unsupported log level: {log_level}")
+
+        return cls(
+            data_dir=Path(os.getenv("MEAL_PLANNER_DATA_DIR", "/data")),
+            language=language,
+            log_level=log_level,
+            ingress_only=os.getenv("MEAL_PLANNER_INGRESS_ONLY", "false").lower()
+            in {"1", "true", "yes"},
+        )
