@@ -18,6 +18,7 @@ const elements = {
   form: document.querySelector("#meal-form"),
   formError: document.querySelector("#form-error"),
   toast: document.querySelector("#toast"),
+  generateWeek: document.querySelector("#generate-week"),
 };
 
 function mondayFor(value) {
@@ -120,6 +121,9 @@ function renderWeek() {
   const end = parseDate(state.plan.week_end);
   const rangeFormat = new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" });
   elements.weekHeading.textContent = `${rangeFormat.format(start)} – ${rangeFormat.format(end)}`;
+  elements.generateWeek.textContent = t(
+    state.plan.days.some((day) => day.meal) ? "week.regenerate" : "week.generate",
+  );
   elements.weekGrid.replaceChildren();
 
   const dayKeys = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
@@ -149,6 +153,27 @@ function renderWeek() {
     });
     select.addEventListener("change", () => updateAssignment(day.date, select.value));
     card.append(select);
+    if (day.meal) {
+      const footer = element("div", "day-card__footer");
+      footer.append(
+        element(
+          "span",
+          "day-card__status",
+          t(day.is_manual_override ? "week.manual" : "week.generated"),
+        ),
+      );
+      if (!day.is_manual_override) {
+        const regenerateButton = element(
+          "button",
+          "button button--small",
+          t("week.regenerateDay"),
+        );
+        regenerateButton.type = "button";
+        regenerateButton.addEventListener("click", () => regenerateDay(day.date));
+        footer.append(regenerateButton);
+      }
+      card.append(footer);
+    }
     elements.weekGrid.append(card);
   });
 }
@@ -210,9 +235,47 @@ async function updateAssignment(day, mealId) {
     showToast(t("status.assigned"));
   } catch (error) {
     console.error(error);
-    showToast(t("status.error"));
+    showToast(localizedError(error));
     await loadWeek();
   }
+}
+
+async function generateWeek() {
+  setPlanningBusy(true);
+  try {
+    state.plan = await api(`plans/${state.plan.week_start}/generate`, { method: "POST" });
+    renderWeek();
+    showToast(t("status.generated"));
+  } catch (error) {
+    console.error(error);
+    showToast(localizedError(error));
+  } finally {
+    setPlanningBusy(false);
+  }
+}
+
+async function regenerateDay(day) {
+  setPlanningBusy(true);
+  try {
+    state.plan = await api(`plans/${state.plan.week_start}/days/${day}/regenerate`, {
+      method: "POST",
+    });
+    renderWeek();
+    showToast(t("status.regeneratedDay"));
+  } catch (error) {
+    console.error(error);
+    showToast(localizedError(error));
+  } finally {
+    setPlanningBusy(false);
+  }
+}
+
+function setPlanningBusy(busy) {
+  document
+    .querySelectorAll(".week-controls button, .week-grid button, .week-grid select")
+    .forEach((control) => {
+      control.disabled = busy;
+    });
 }
 
 function openMealDialog(meal = null) {
@@ -289,6 +352,7 @@ function bindEvents() {
   elements.form.addEventListener("submit", saveMeal);
   elements.search.addEventListener("input", renderMeals);
   elements.language.addEventListener("change", (event) => setLanguage(event.target.value));
+  elements.generateWeek.addEventListener("click", generateWeek);
   document.querySelector("#previous-week").addEventListener("click", async () => {
     state.weekStart = addDays(state.weekStart, -7);
     await loadWeek();

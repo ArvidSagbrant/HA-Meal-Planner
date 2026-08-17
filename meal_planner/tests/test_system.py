@@ -9,6 +9,16 @@ def test_health_and_settings(client: TestClient) -> None:
     assert client.get("/api/settings").json() == {
         "language": "en",
         "log_level": "ERROR",
+        "planning": {
+            "repeat_avoidance_weeks": 2,
+            "vegetarian_target": 2,
+            "preference_weight": 1.0,
+            "recency_weight": 1.0,
+            "effort_weight": 0.6,
+            "variety_weight": 1.0,
+            "weekday_effort_target": 2,
+            "weekend_effort_target": 4,
+        },
     }
 
 

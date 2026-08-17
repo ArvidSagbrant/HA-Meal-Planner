@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
+
+from .planner import PlannerSettings
 
 
 SUPPORTED_LANGUAGES = {"en", "sv"}
@@ -17,6 +19,7 @@ class Settings:
     language: str = "en"
     log_level: str = "INFO"
     ingress_only: bool = False
+    planner: PlannerSettings = field(default_factory=PlannerSettings)
 
     @property
     def database_path(self) -> Path:
@@ -38,4 +41,30 @@ class Settings:
             log_level=log_level,
             ingress_only=os.getenv("MEAL_PLANNER_INGRESS_ONLY", "false").lower()
             in {"1", "true", "yes"},
+            planner=PlannerSettings(
+                repeat_avoidance_weeks=int(
+                    os.getenv("MEAL_PLANNER_REPEAT_AVOIDANCE_WEEKS", "2")
+                ),
+                vegetarian_target=int(
+                    os.getenv("MEAL_PLANNER_VEGETARIAN_TARGET", "2")
+                ),
+                preference_weight=float(
+                    os.getenv("MEAL_PLANNER_PREFERENCE_WEIGHT", "1.0")
+                ),
+                recency_weight=float(
+                    os.getenv("MEAL_PLANNER_RECENCY_WEIGHT", "1.0")
+                ),
+                effort_weight=float(
+                    os.getenv("MEAL_PLANNER_EFFORT_WEIGHT", "0.6")
+                ),
+                variety_weight=float(
+                    os.getenv("MEAL_PLANNER_VARIETY_WEIGHT", "1.0")
+                ),
+                weekday_effort_target=int(
+                    os.getenv("MEAL_PLANNER_WEEKDAY_EFFORT_TARGET", "2")
+                ),
+                weekend_effort_target=int(
+                    os.getenv("MEAL_PLANNER_WEEKEND_EFFORT_TARGET", "4")
+                ),
+            ),
         )

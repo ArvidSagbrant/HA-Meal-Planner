@@ -1,5 +1,6 @@
 """Health and non-secret runtime configuration endpoints."""
 
+from dataclasses import asdict
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
@@ -23,5 +24,5 @@ def runtime_settings(container: ContainerDependency) -> RuntimeSettings:
     return RuntimeSettings(
         language=container.settings.language,
         log_level=container.settings.log_level,
+        planning=asdict(container.settings.planner),
     )
-

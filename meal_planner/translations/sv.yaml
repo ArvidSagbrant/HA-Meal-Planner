@@ -5,4 +5,27 @@ configuration:
   log_level:
     name: Loggnivå
     description: Lägsta allvarlighetsgrad som skrivs till tilläggsloggen.
-
+  repeat_avoidance_weeks:
+    name: Undvik upprepning
+    description: Antal tidigare veckor då en genererad måltid inte får upprepas.
+  vegetarian_target:
+    name: Vegetariskt mål
+    description: Önskat antal vegetariska måltider under en genererad vecka.
+  preference_weight:
+    name: Preferensvikt
+    description: Hur mycket måltidernas betyg påverkar genereringen.
+  recency_weight:
+    name: Historikvikt
+    description: Hur mycket tiden sedan måltiden senast användes påverkar.
+  effort_weight:
+    name: Vikt för tillagningsinsats
+    description: Hur mycket önskad tillagningsinsats påverkar genereringen.
+  variety_weight:
+    name: Variationsvikt
+    description: Hur mycket protein-, tagg- och vegetarisk variation påverkar.
+  weekday_effort_target:
+    name: Insatsmål för vardagar
+    description: Önskad tillagningsinsats från 1 till 5 på vardagar.
+  weekend_effort_target:
+    name: Insatsmål för helger
+    description: Önskad tillagningsinsats från 1 till 5 på helger.

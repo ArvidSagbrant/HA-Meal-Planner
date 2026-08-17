@@ -50,7 +50,7 @@ h2 { font-size: clamp(1.4rem, 3vw, 2rem); letter-spacing: -0.03em; }
   text-transform: uppercase;
 }
 
-.topbar__actions, .week-navigation, .dialog-actions { display: flex; align-items: center; gap: 10px; }
+.topbar__actions, .week-navigation, .week-controls, .dialog-actions { display: flex; align-items: center; gap: 10px; }
 .language-picker { display: flex; align-items: center; gap: 8px; color: var(--text-muted); }
 
 .button, .icon-button {
@@ -105,6 +105,16 @@ section {
 .day-card__weekday { font-size: .78rem; font-weight: 800; text-transform: uppercase; color: var(--primary); }
 .day-card__date { margin: 3px 0 18px; color: var(--text-muted); font-size: .86rem; }
 .day-card select { width: 100%; }
+.day-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+}
+.day-card__status { color: var(--text-muted); font-size: .72rem; font-weight: 700; }
+.button--small { min-height: 34px; padding: 6px 9px; font-size: .76rem; }
+button:disabled, select:disabled { cursor: wait; opacity: .58; }
 
 .meal-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .meal-card {
@@ -182,6 +192,7 @@ dialog::backdrop { background: rgb(14 25 20 / 52%); backdrop-filter: blur(3px); 
   .topbar, .section-heading { align-items: stretch; flex-direction: column; }
   .topbar__actions { justify-content: space-between; }
   .week-navigation { display: grid; grid-template-columns: 42px 1fr 42px; }
+  .week-controls { align-items: stretch; flex-direction: column; }
   .meal-list, .week-grid, .form-grid { grid-template-columns: 1fr; }
   .day-card:last-child { grid-column: auto; }
   .meal-card { align-items: flex-start; flex-direction: column; }
@@ -203,4 +214,3 @@ dialog::backdrop { background: rgb(14 25 20 / 52%); backdrop-filter: blur(3px); 
   }
   .button--primary { color: #10231a; }
 }
-

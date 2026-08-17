@@ -94,6 +94,18 @@ class WeeklyPlan(BaseModel):
     days: list[PlanDay]
 
 
+class PlanningSettingsView(BaseModel):
+    repeat_avoidance_weeks: int
+    vegetarian_target: int
+    preference_weight: float
+    recency_weight: float
+    effort_weight: float
+    variety_weight: float
+    weekday_effort_target: int
+    weekend_effort_target: int
+
+
 class RuntimeSettings(BaseModel):
     language: str
     log_level: str
+    planning: PlanningSettingsView

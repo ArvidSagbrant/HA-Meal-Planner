@@ -5,4 +5,27 @@ configuration:
   log_level:
     name: Log level
     description: Minimum severity written to the add-on log.
-
+  repeat_avoidance_weeks:
+    name: Repeat avoidance
+    description: Number of previous weeks in which a generated meal may not repeat.
+  vegetarian_target:
+    name: Vegetarian target
+    description: Preferred number of vegetarian meals in a generated week.
+  preference_weight:
+    name: Preference weight
+    description: Influence of meal ratings on generation.
+  recency_weight:
+    name: Recency weight
+    description: Influence of how long ago a meal was last served.
+  effort_weight:
+    name: Cooking effort weight
+    description: Influence of cooking effort targets on generation.
+  variety_weight:
+    name: Variety weight
+    description: Influence of protein, tag, and vegetarian variety.
+  weekday_effort_target:
+    name: Weekday effort target
+    description: Preferred cooking effort from 1 to 5 on weekdays.
+  weekend_effort_target:
+    name: Weekend effort target
+    description: Preferred cooking effort from 1 to 5 on weekends.
