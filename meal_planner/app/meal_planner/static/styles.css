@@ -52,6 +52,24 @@ h2 { font-size: clamp(1.4rem, 3vw, 2rem); letter-spacing: -0.03em; }
 
 .topbar__actions, .week-navigation, .week-controls, .dialog-actions { display: flex; align-items: center; gap: 10px; }
 .language-picker { display: flex; align-items: center; gap: 8px; color: var(--text-muted); }
+.mqtt-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 10px;
+  color: var(--text-muted);
+  background: var(--surface);
+  font-size: .75rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+.mqtt-status__dot { width: 8px; height: 8px; border-radius: 50%; background: #d28d25; }
+.mqtt-status[data-state="connected"] .mqtt-status__dot { background: #399269; }
+.mqtt-status[data-state="disabled"] .mqtt-status__dot { background: #89958e; }
+.mqtt-status[data-state="error"] .mqtt-status__dot { background: var(--danger); }
 
 .button, .icon-button {
   min-height: 42px;
@@ -193,7 +211,7 @@ dialog::backdrop { background: rgb(14 25 20 / 52%); backdrop-filter: blur(3px); 
 
 @media (max-width: 640px) {
   .topbar, .section-heading { align-items: stretch; flex-direction: column; }
-  .topbar__actions { justify-content: space-between; }
+  .topbar__actions { flex-wrap: wrap; justify-content: space-between; }
   .week-navigation { display: grid; grid-template-columns: 42px 1fr 42px; }
   .week-controls { align-items: stretch; flex-direction: column; }
   .meal-list, .week-grid, .form-grid, .checkbox-grid { grid-template-columns: 1fr; }

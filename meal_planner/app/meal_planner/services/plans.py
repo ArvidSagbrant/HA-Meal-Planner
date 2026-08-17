@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import date, timedelta
 
 from ..errors import (
@@ -28,10 +29,12 @@ class PlanService:
         plans: PlanRepository,
         meals: MealRepository,
         planner: DeterministicPlanner,
+        on_change: Callable[[], None] | None = None,
     ) -> None:
         self.plans = plans
         self.meals = meals
         self.planner = planner
+        self._on_change = on_change or (lambda: None)
 
     def get_week(self, week_start: date) -> WeeklyPlan:
         self._validate_week_start(week_start)
@@ -73,13 +76,13 @@ class PlanService:
                 "The same meal cannot be assigned twice in one week"
             )
         self.plans.assign(week_start, meal_date, meal_id)
-        return self.get_week(week_start)
+        return self._changed_week(week_start)
 
     def clear_meal(self, week_start: date, meal_date: date) -> WeeklyPlan:
         self._validate_day(week_start, meal_date)
         self._require_editable_day(self.plans.get_days(week_start), meal_date)
         self.plans.clear(week_start, meal_date)
-        return self.get_week(week_start)
+        return self._changed_week(week_start)
 
     def set_cooked(
         self, week_start: date, meal_date: date, is_cooked: bool
@@ -89,7 +92,7 @@ class PlanService:
         if is_cooked and day["meal_id"] is None:
             raise CookedDayError("Select a meal before marking the day as cooked")
         self.plans.set_cooked(week_start, meal_date, is_cooked)
-        return self.get_week(week_start)
+        return self._changed_week(week_start)
 
     def generate_week(self, week_start: date) -> WeeklyPlan:
         self._validate_week_start(week_start)
@@ -110,7 +113,7 @@ class PlanService:
         except PlanningFailure as error:
             raise PlanningError(str(error)) from error
         self.plans.replace_generated(week_start, result.assignments)
-        return self.get_week(week_start)
+        return self._changed_week(week_start)
 
     def regenerate_day(self, week_start: date, meal_date: date) -> WeeklyPlan:
         self._validate_day(week_start, meal_date)
@@ -128,7 +131,12 @@ class PlanService:
         except PlanningFailure as error:
             raise PlanningError(str(error)) from error
         self.plans.assign_generated(week_start, meal_date, meal_id)
-        return self.get_week(week_start)
+        return self._changed_week(week_start)
+
+    def _changed_week(self, week_start: date) -> WeeklyPlan:
+        plan = self.get_week(week_start)
+        self._on_change()
+        return plan
 
     @staticmethod
     def _meal_candidates(items: list[dict]) -> list[MealCandidate]:

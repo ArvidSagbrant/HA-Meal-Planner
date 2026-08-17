@@ -15,6 +15,10 @@
         <h1 data-i18n="app.title"></h1>
       </div>
       <div class="topbar__actions">
+        <div class="mqtt-status" id="mqtt-status" role="status">
+          <span class="mqtt-status__dot" aria-hidden="true"></span>
+          <span id="mqtt-status-text"></span>
+        </div>
         <label class="language-picker">
           <span data-i18n="language.label"></span>
           <select id="language-select" data-i18n-aria-label="language.label">

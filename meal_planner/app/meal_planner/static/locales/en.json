@@ -1,6 +1,7 @@
 {
   "app": { "title": "Meal Planner", "subtitle": "Home Assistant add-on" },
   "language": { "label": "Language" },
+  "mqtt": { "connected": "MQTT connected", "connecting": "MQTT connecting…", "disabled": "MQTT disabled", "error": "MQTT unavailable", "unavailable": "Could not read MQTT status" },
   "common": { "save": "Save", "cancel": "Cancel", "close": "Close", "edit": "Edit", "delete": "Delete", "none": "No meal selected" },
   "week": { "eyebrow": "Weekly plan", "navigation": "Week navigation", "previous": "Previous week", "next": "Next week", "current": "This week", "generate": "Generate week", "regenerate": "Regenerate week", "regenerateDay": "Regenerate", "manual": "Manual", "generated": "Generated", "cooked": "Cooked" },
   "meals": { "eyebrow": "Meal database", "title": "Meals", "add": "Add meal", "search": "Search meals", "empty": "No meals yet. Add the first one to start planning.", "noResults": "No meals match your search." },

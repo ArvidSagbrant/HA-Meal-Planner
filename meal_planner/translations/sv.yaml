@@ -29,3 +29,30 @@ configuration:
   weekend_effort_target:
     name: Insatsmål för helger
     description: Önskad tillagningsinsats från 1 till 5 på helger.
+  mqtt_mode:
+    name: MQTT-broker
+    description: Använd Supervisors broker automatiskt, ange en extern broker eller stäng av MQTT.
+  mqtt_host:
+    name: Extern MQTT-värd
+    description: Värdnamn eller IP-adress som används i externt läge.
+  mqtt_port:
+    name: Extern MQTT-port
+    description: Brokerport som används i externt läge.
+  mqtt_username:
+    name: Externt MQTT-användarnamn
+    description: Valfritt användarnamn för brokern i externt läge.
+  mqtt_password:
+    name: Externt MQTT-lösenord
+    description: Valfritt lösenord för brokern i externt läge.
+  mqtt_tls:
+    name: TLS för extern MQTT
+    description: Aktivera TLS för anslutningen till den externa brokern.
+  mqtt_discovery_prefix:
+    name: Prefix för MQTT Discovery
+    description: Prefixet som används av Home Assistant MQTT Discovery.
+  mqtt_topic_prefix:
+    name: MQTT-topicprefix
+    description: Bastopic för Måltidsplanerarens tillgänglighet och entitetstillstånd.
+  mqtt_birth_topic:
+    name: Home Assistants födelsetopic
+    description: Topic som upptäcker omstarter av Home Assistant och publicerar Discovery igen.

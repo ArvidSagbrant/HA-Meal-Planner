@@ -31,6 +31,41 @@ export MEAL_PLANNER_VARIETY_WEIGHT="$(read_option 'variety_weight' '1.0')"
 export MEAL_PLANNER_WEEKDAY_EFFORT_TARGET="$(read_option 'weekday_effort_target' '2')"
 export MEAL_PLANNER_WEEKEND_EFFORT_TARGET="$(read_option 'weekend_effort_target' '4')"
 
+export MEAL_PLANNER_MQTT_MODE="$(read_option 'mqtt_mode' 'auto')"
+export MEAL_PLANNER_MQTT_DISCOVERY_PREFIX="$(read_option 'mqtt_discovery_prefix' 'homeassistant')"
+export MEAL_PLANNER_MQTT_TOPIC_PREFIX="$(read_option 'mqtt_topic_prefix' 'meal_planner')"
+export MEAL_PLANNER_MQTT_BIRTH_TOPIC="$(read_option 'mqtt_birth_topic' 'homeassistant/status')"
+export MEAL_PLANNER_MQTT_ENABLED="false"
+
+if [[ "${MEAL_PLANNER_MQTT_MODE}" == "external" ]]; then
+    export MEAL_PLANNER_MQTT_ENABLED="true"
+    export MEAL_PLANNER_MQTT_HOST="$(read_option 'mqtt_host' '')"
+    export MEAL_PLANNER_MQTT_PORT="$(read_option 'mqtt_port' '1883')"
+    export MEAL_PLANNER_MQTT_USERNAME="$(read_option 'mqtt_username' '')"
+    export MEAL_PLANNER_MQTT_PASSWORD="$(read_option 'mqtt_password' '')"
+    export MEAL_PLANNER_MQTT_TLS="$(read_option 'mqtt_tls' 'false')"
+elif [[ "${MEAL_PLANNER_MQTT_MODE}" == "auto" && -n "${SUPERVISOR_TOKEN:-}" ]]; then
+    mqtt_host="$(bashio::services 'mqtt' 'host' 2>/dev/null || true)"
+    if bashio::var.has_value "${mqtt_host}"; then
+        export MEAL_PLANNER_MQTT_ENABLED="true"
+        export MEAL_PLANNER_MQTT_HOST="${mqtt_host}"
+        export MEAL_PLANNER_MQTT_PORT="$(bashio::services 'mqtt' 'port')"
+        export MEAL_PLANNER_MQTT_USERNAME="$(bashio::services 'mqtt' 'username')"
+        export MEAL_PLANNER_MQTT_PASSWORD="$(bashio::services 'mqtt' 'password')"
+        export MEAL_PLANNER_MQTT_TLS="$(bashio::services 'mqtt' 'ssl')"
+        bashio::log.info "Using the Supervisor-provided MQTT service"
+    else
+        bashio::log.warning "No Supervisor MQTT service was found; MQTT entities are disabled"
+    fi
+fi
+
+if [[ -n "${SUPERVISOR_TOKEN:-}" ]]; then
+    supervisor_timezone="$(bashio::supervisor.timezone 2>/dev/null || true)"
+    if [[ -n "${supervisor_timezone}" ]]; then
+        export TZ="${supervisor_timezone}"
+    fi
+fi
+
 exec python3 -m uvicorn meal_planner.main:app \
     --host 0.0.0.0 \
     --port 8099

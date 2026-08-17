@@ -32,6 +32,26 @@ def test_meal_crud(client: TestClient, meal_payload: dict) -> None:
     assert client.get(f"/api/meals/{created['id']}").status_code == 404
 
 
+def test_mutations_notify_optional_integrations(
+    client: TestClient, meal_payload: dict
+) -> None:
+    notifications: list[None] = []
+    client.app.state.container.changes.subscribe(lambda: notifications.append(None))
+
+    meal = client.post("/api/meals", json=meal_payload).json()
+    client.patch(f"/api/meals/{meal['id']}", json={"preference": 5})
+    client.put(
+        "/api/plans/2026-08-17/days/2026-08-17",
+        json={"meal_id": meal["id"]},
+    )
+    client.patch(
+        "/api/plans/2026-08-17/days/2026-08-17/cooked",
+        json={"is_cooked": True},
+    )
+
+    assert len(notifications) == 4
+
+
 def test_duplicate_meal_name_is_rejected_case_insensitively(
     client: TestClient, meal_payload: dict
 ) -> None:

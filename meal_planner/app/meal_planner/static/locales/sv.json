@@ -1,6 +1,7 @@
 {
   "app": { "title": "Måltidsplanerare", "subtitle": "Tillägg för Home Assistant" },
   "language": { "label": "Språk" },
+  "mqtt": { "connected": "MQTT ansluten", "connecting": "MQTT ansluter…", "disabled": "MQTT avstängt", "error": "MQTT ej tillgängligt", "unavailable": "Kunde inte läsa MQTT-status" },
   "common": { "save": "Spara", "cancel": "Avbryt", "close": "Stäng", "edit": "Redigera", "delete": "Ta bort", "none": "Ingen måltid vald" },
   "week": { "eyebrow": "Veckoplan", "navigation": "Veckonavigering", "previous": "Föregående vecka", "next": "Nästa vecka", "current": "Denna vecka", "generate": "Generera vecka", "regenerate": "Generera om veckan", "regenerateDay": "Generera om", "manual": "Manuell", "generated": "Genererad", "cooked": "Tillagad" },
   "meals": { "eyebrow": "Måltidsdatabas", "title": "Måltider", "add": "Lägg till måltid", "search": "Sök måltider", "empty": "Det finns inga måltider ännu. Lägg till den första för att börja planera.", "noResults": "Inga måltider matchar din sökning." },
