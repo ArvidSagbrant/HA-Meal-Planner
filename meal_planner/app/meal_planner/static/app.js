@@ -3,6 +3,8 @@ const state = {
   language: "en",
   messages: {},
   meals: [],
+  aiSettings: null,
+  suggestions: [],
   mqttStatus: null,
   plan: null,
   proteinSources: [],
@@ -23,6 +25,11 @@ const elements = {
   generateWeek: document.querySelector("#generate-week"),
   mqttStatus: document.querySelector("#mqtt-status"),
   mqttStatusText: document.querySelector("#mqtt-status-text"),
+  suggestMeals: document.querySelector("#suggest-meals"),
+  suggestionsDialog: document.querySelector("#suggestions-dialog"),
+  suggestionsError: document.querySelector("#suggestions-error"),
+  suggestionList: document.querySelector("#suggestion-list"),
+  generateSuggestions: document.querySelector("#generate-suggestions"),
 };
 
 function mondayFor(value) {
@@ -89,6 +96,7 @@ async function setLanguage(language) {
   renderWeek();
   renderMeals();
   renderMqttStatus();
+  renderSuggestions();
 }
 
 function translatePage() {
@@ -280,6 +288,65 @@ function renderMeals() {
   });
 }
 
+function renderSuggestions() {
+  elements.suggestionList.replaceChildren();
+  state.suggestions.forEach((suggestion) => {
+    const card = element("article", "suggestion-card");
+    const copy = element("div");
+    copy.append(
+      element("h3", "", suggestion.name),
+      element("p", "", suggestion.description),
+      element(
+        "p",
+        "suggestion-card__meta",
+        t(suggestion.is_vegetarian ? "meal.metaVegetarian" : "meal.meta", {
+          preference: 3,
+          effort: suggestion.cooking_effort,
+          protein: proteinLabel(suggestion.protein_source),
+        }),
+      ),
+    );
+    const useButton = element("button", "button", t("ai.useSuggestion"));
+    useButton.type = "button";
+    useButton.addEventListener("click", () => {
+      elements.suggestionsDialog.close();
+      openMealDialog({ ...suggestion, preference: 3, excluded: false });
+    });
+    card.append(copy, useButton);
+    elements.suggestionList.append(card);
+  });
+}
+
+function openSuggestionsDialog() {
+  state.suggestions = [];
+  elements.suggestionsError.textContent = "";
+  renderSuggestions();
+  elements.suggestionsDialog.showModal();
+  document.querySelector("#suggestion-preferences").focus();
+}
+
+async function requestSuggestions() {
+  elements.generateSuggestions.disabled = true;
+  elements.generateSuggestions.textContent = t("ai.generating");
+  elements.suggestionsError.textContent = "";
+  try {
+    state.suggestions = await api("ai/suggestions", {
+      method: "POST",
+      body: JSON.stringify({
+        count: Number(document.querySelector("#suggestion-count").value),
+        preferences: document.querySelector("#suggestion-preferences").value,
+      }),
+    });
+    renderSuggestions();
+  } catch (error) {
+    console.error(error);
+    elements.suggestionsError.textContent = localizedError(error);
+  } finally {
+    elements.generateSuggestions.disabled = false;
+    elements.generateSuggestions.textContent = t("ai.generate");
+  }
+}
+
 async function loadWeek() {
   state.plan = await api(`plans/${dateKey(state.weekStart)}`);
   renderWeek();
@@ -429,6 +496,11 @@ function showToast(message) {
 
 function bindEvents() {
   document.querySelector("#add-meal").addEventListener("click", () => openMealDialog());
+  elements.suggestMeals.addEventListener("click", openSuggestionsDialog);
+  document.querySelector("#close-suggestions").addEventListener("click", () => {
+    elements.suggestionsDialog.close();
+  });
+  elements.generateSuggestions.addEventListener("click", requestSuggestions);
   document.querySelector("#close-dialog").addEventListener("click", () => elements.dialog.close());
   document.querySelector("#cancel-dialog").addEventListener("click", () => elements.dialog.close());
   elements.form.addEventListener("submit", saveMeal);
@@ -454,6 +526,8 @@ async function start() {
   try {
     const settings = await api("settings");
     state.proteinSources = settings.protein_sources;
+    state.aiSettings = settings.ai;
+    elements.suggestMeals.hidden = !settings.ai.suggestions_enabled;
     const preferred = localStorage.getItem("meal-planner-language") || settings.language;
     await setLanguage(preferred);
     [state.meals, state.plan] = await Promise.all([

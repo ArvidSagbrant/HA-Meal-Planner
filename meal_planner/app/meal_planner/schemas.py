@@ -131,9 +131,36 @@ class MqttStatusView(BaseModel):
     last_error: str | None
 
 
+class AISettingsView(BaseModel):
+    enabled: bool
+    provider: str
+    base_url: str | None
+    model: str | None
+    timeout_seconds: float
+    temperature: float
+    refinement_enabled: bool
+    suggestions_enabled: bool
+
+
+class AIStatusView(BaseModel):
+    enabled: bool
+    provider: str
+    model: str | None
+    refinement_enabled: bool
+    suggestions_enabled: bool
+    last_action: str | None
+    last_error: str | None
+
+
+class MealSuggestionRequest(BaseModel):
+    count: int = Field(default=3, ge=1, le=10)
+    preferences: str = Field(default="", max_length=500)
+
+
 class RuntimeSettings(BaseModel):
     language: str
     log_level: str
     protein_sources: list[ProteinSource]
     planning: PlanningSettingsView
     mqtt: MqttSettingsView
+    ai: AISettingsView

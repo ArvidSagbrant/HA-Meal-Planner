@@ -51,6 +51,7 @@ h2 { font-size: clamp(1.4rem, 3vw, 2rem); letter-spacing: -0.03em; }
 }
 
 .topbar__actions, .week-navigation, .week-controls, .dialog-actions { display: flex; align-items: center; gap: 10px; }
+.meal-section__actions { display: flex; align-items: center; gap: 10px; }
 .language-picker { display: flex; align-items: center; gap: 8px; color: var(--text-muted); }
 .mqtt-status {
   display: inline-flex;
@@ -176,6 +177,29 @@ dialog {
 dialog::backdrop { background: rgb(14 25 20 / 52%); backdrop-filter: blur(3px); }
 #meal-form { display: grid; gap: 16px; padding: 24px; }
 #meal-form label > span { display: block; margin-bottom: 6px; font-size: .84rem; font-weight: 750; }
+.suggestions-dialog__content { display: grid; gap: 16px; padding: 24px; }
+.suggestions-dialog__intro { color: var(--text-muted); line-height: 1.5; }
+.suggestion-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 90px auto;
+  align-items: end;
+  gap: 12px;
+}
+.suggestion-controls label > span { display: block; margin-bottom: 6px; font-size: .84rem; font-weight: 750; }
+.suggestion-list { display: grid; gap: 10px; }
+.suggestion-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  background: var(--surface-muted);
+}
+.suggestion-card h3 { margin: 0 0 5px; }
+.suggestion-card p { color: var(--text-muted); font-size: .84rem; }
+.suggestion-card__meta { margin-top: 7px; font-weight: 700; }
 .dialog-heading { display: flex; align-items: center; justify-content: space-between; }
 .dialog-actions { justify-content: flex-end; }
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
@@ -215,6 +239,9 @@ dialog::backdrop { background: rgb(14 25 20 / 52%); backdrop-filter: blur(3px); 
   .week-navigation { display: grid; grid-template-columns: 42px 1fr 42px; }
   .week-controls { align-items: stretch; flex-direction: column; }
   .meal-list, .week-grid, .form-grid, .checkbox-grid { grid-template-columns: 1fr; }
+  .meal-section__actions { align-items: stretch; flex-direction: column; }
+  .suggestion-controls { grid-template-columns: 1fr; }
+  .suggestion-card { align-items: flex-start; flex-direction: column; }
   .day-card:last-child { grid-column: auto; }
   .meal-card { align-items: flex-start; flex-direction: column; }
   .meal-card__actions { width: 100%; }

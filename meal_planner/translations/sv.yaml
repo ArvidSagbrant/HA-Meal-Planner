@@ -56,3 +56,27 @@ configuration:
   mqtt_birth_topic:
     name: Home Assistants födelsetopic
     description: Topic som upptäcker omstarter av Home Assistant och publicerar Discovery igen.
+  ai_provider:
+    name: AI-leverantör
+    description: Stäng av AI, använd OpenAI eller anslut till en OpenAI-kompatibel llama.cpp-server.
+  ai_base_url:
+    name: Bas-URL för AI
+    description: API-adress som slutar med /v1. Lämna tom för vald leverantörs standardadress.
+  ai_api_key:
+    name: API-nyckel för AI
+    description: Krävs för OpenAI och är valfri för kompatibla lokala servrar.
+  ai_model:
+    name: AI-modell
+    description: Modellidentifieraren som den valda leverantören exponerar.
+  ai_timeout_seconds:
+    name: Tidsgräns för AI
+    description: Maximalt antal sekunder för varje AI-anrop.
+  ai_temperature:
+    name: AI-temperatur
+    description: Samplingstemperatur från 0 till 2 för kompatibla lokala leverantörer.
+  ai_refinement_enabled:
+    name: Förfina genererade planer
+    description: Låt AI föreslå förbättringar efter deterministisk generering och före validering.
+  ai_suggestions_enabled:
+    name: Måltidsförslag
+    description: Låt AI föreslå nya måltider utan att lägga till dem automatiskt.

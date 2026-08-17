@@ -46,9 +46,18 @@ The API documentation is available at `/api/docs`. Important endpoints are:
 - `PATCH /api/plans/{monday}/days/{date}/cooked`
 - `POST /api/plans/{monday}/days/{date}/regenerate`
 - `GET /api/mqtt/status`
+- `GET /api/ai/status`
+- `POST /api/ai/suggestions`
 
 The add-on automatically uses Home Assistant's Supervisor-provided MQTT service
 when available. MQTT Discovery creates stable today and tomorrow sensors; an
 external broker or disabled MQTT can be selected in the add-on configuration.
+
+Optional AI assistance supports OpenAI's Responses API and a local llama.cpp
+OpenAI-compatible server. Deterministic generation remains authoritative: every
+AI refinement is validated against meal IDs, fixed assignments, and all hard
+planning constraints before it can be persisted. AI failures fall back to the
+deterministic candidate. Meal suggestions are previews that open in the normal
+editor and are never inserted automatically.
 
 See [SPECIFICATION.md](SPECIFICATION.md) for the complete product specification.

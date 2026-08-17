@@ -27,3 +27,7 @@ class InvalidOperationError(MealPlannerError):
 
 class PlanningError(MealPlannerError):
     pass
+
+
+class AIUnavailableError(MealPlannerError):
+    pass

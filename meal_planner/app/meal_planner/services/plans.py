@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import date, timedelta
 
+from ..ai import AIService
 from ..errors import (
     CookedDayError,
     DuplicateAssignmentError,
@@ -29,11 +30,13 @@ class PlanService:
         plans: PlanRepository,
         meals: MealRepository,
         planner: DeterministicPlanner,
+        ai: AIService | None = None,
         on_change: Callable[[], None] | None = None,
     ) -> None:
         self.plans = plans
         self.meals = meals
         self.planner = planner
+        self.ai = ai
         self._on_change = on_change or (lambda: None)
 
     def get_week(self, week_start: date) -> WeeklyPlan:
@@ -98,12 +101,15 @@ class PlanService:
         self._validate_week_start(week_start)
         meal_data = self.meals.list()
         day_data = self.plans.get_days(week_start)
+        meal_candidates = self._meal_candidates(meal_data)
+        plan_slots = self._plan_slots(day_data)
+        history = PlanningHistory(self.plans.get_last_used(week_start))
         try:
             result = self.planner.generate_week(
                 week_start=week_start,
-                meals=self._meal_candidates(meal_data),
-                slots=self._plan_slots(day_data),
-                history=PlanningHistory(self.plans.get_last_used(week_start)),
+                meals=meal_candidates,
+                slots=plan_slots,
+                history=history,
                 previous_assignments={
                     date.fromisoformat(item["meal_date"]): item["meal_id"]
                     for item in day_data
@@ -112,6 +118,14 @@ class PlanService:
             )
         except PlanningFailure as error:
             raise PlanningError(str(error)) from error
+        if self.ai is not None:
+            result = self.ai.refine_plan(
+                week_start=week_start,
+                deterministic=result,
+                meals=meal_candidates,
+                slots=plan_slots,
+                history=history,
+            )
         self.plans.replace_generated(week_start, result.assignments)
         return self._changed_week(week_start)
 

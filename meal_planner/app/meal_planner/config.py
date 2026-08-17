@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from .planner import PlannerSettings
 
@@ -12,6 +13,43 @@ from .planner import PlannerSettings
 SUPPORTED_LANGUAGES = {"en", "sv"}
 SUPPORTED_LOG_LEVELS = {"DEBUG", "INFO", "WARNING", "ERROR"}
 SUPPORTED_MQTT_MODES = {"auto", "external", "disabled"}
+SUPPORTED_AI_PROVIDERS = {"disabled", "openai", "llamacpp"}
+
+
+@dataclass(frozen=True, slots=True)
+class AISettings:
+    provider: str = "disabled"
+    base_url: str = ""
+    api_key: str = field(default="", repr=False)
+    model: str = "gpt-5-mini"
+    timeout_seconds: float = 30.0
+    temperature: float = 0.2
+    refinement_enabled: bool = True
+    suggestions_enabled: bool = True
+
+    def __post_init__(self) -> None:
+        if self.provider not in SUPPORTED_AI_PROVIDERS:
+            raise ValueError(f"Unsupported AI provider: {self.provider}")
+        if self.provider != "disabled" and not self.base_url.strip():
+            raise ValueError("AI base URL is required when AI is enabled")
+        if self.provider != "disabled":
+            parsed_url = urlsplit(self.base_url)
+            if (
+                self.base_url != self.base_url.strip()
+                or parsed_url.scheme not in {"http", "https"}
+                or not parsed_url.netloc
+            ):
+                raise ValueError("AI base URL must be a valid HTTP(S) URL")
+        if self.provider != "disabled" and not self.model.strip():
+            raise ValueError("AI model is required when AI is enabled")
+        if not 1 <= self.timeout_seconds <= 300:
+            raise ValueError("AI timeout must be between 1 and 300 seconds")
+        if not 0 <= self.temperature <= 2:
+            raise ValueError("AI temperature must be between 0 and 2")
+
+    @property
+    def enabled(self) -> bool:
+        return self.provider != "disabled"
 
 
 @dataclass(frozen=True, slots=True)
@@ -53,6 +91,7 @@ class Settings:
     ingress_only: bool = False
     planner: PlannerSettings = field(default_factory=PlannerSettings)
     mqtt: MqttSettings = field(default_factory=MqttSettings)
+    ai: AISettings = field(default_factory=AISettings)
 
     @property
     def database_path(self) -> Path:
@@ -70,6 +109,13 @@ class Settings:
         mqtt_mode = os.getenv("MEAL_PLANNER_MQTT_MODE", "disabled").lower()
         if mqtt_mode not in SUPPORTED_MQTT_MODES:
             raise ValueError(f"Unsupported MQTT mode: {mqtt_mode}")
+        ai_provider = os.getenv("MEAL_PLANNER_AI_PROVIDER", "disabled").lower()
+        if ai_provider not in SUPPORTED_AI_PROVIDERS:
+            raise ValueError(f"Unsupported AI provider: {ai_provider}")
+        default_ai_url = {
+            "openai": "https://api.openai.com/v1",
+            "llamacpp": "http://localhost:8080/v1",
+        }.get(ai_provider, "")
 
         return cls(
             data_dir=Path(os.getenv("MEAL_PLANNER_DATA_DIR", "/data")),
@@ -122,5 +168,23 @@ class Settings:
                 birth_topic=os.getenv(
                     "MEAL_PLANNER_MQTT_BIRTH_TOPIC", "homeassistant/status"
                 ),
+            ),
+            ai=AISettings(
+                provider=ai_provider,
+                base_url=os.getenv("MEAL_PLANNER_AI_BASE_URL", default_ai_url),
+                api_key=os.getenv("MEAL_PLANNER_AI_API_KEY", ""),
+                model=os.getenv("MEAL_PLANNER_AI_MODEL", "gpt-5-mini"),
+                timeout_seconds=float(
+                    os.getenv("MEAL_PLANNER_AI_TIMEOUT_SECONDS", "30")
+                ),
+                temperature=float(os.getenv("MEAL_PLANNER_AI_TEMPERATURE", "0.2")),
+                refinement_enabled=os.getenv(
+                    "MEAL_PLANNER_AI_REFINEMENT_ENABLED", "true"
+                ).lower()
+                in {"1", "true", "yes"},
+                suggestions_enabled=os.getenv(
+                    "MEAL_PLANNER_AI_SUGGESTIONS_ENABLED", "true"
+                ).lower()
+                in {"1", "true", "yes"},
             ),
         )

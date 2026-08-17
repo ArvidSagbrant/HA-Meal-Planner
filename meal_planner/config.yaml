@@ -1,5 +1,5 @@
 name: Meal Planner
-version: "0.3.0"
+version: "0.4.0"
 slug: meal_planner
 description: Manage meals and plan a week from inside Home Assistant.
 url: https://github.com/ArvidSagbrant/HA-Meal-Planner
@@ -36,6 +36,14 @@ options:
   mqtt_discovery_prefix: homeassistant
   mqtt_topic_prefix: meal_planner
   mqtt_birth_topic: homeassistant/status
+  ai_provider: disabled
+  ai_base_url: ""
+  ai_api_key: ""
+  ai_model: gpt-5-mini
+  ai_timeout_seconds: 30
+  ai_temperature: 0.2
+  ai_refinement_enabled: true
+  ai_suggestions_enabled: true
 schema:
   language: list(en|sv)
   log_level: list(DEBUG|INFO|WARNING|ERROR)
@@ -56,3 +64,11 @@ schema:
   mqtt_discovery_prefix: str
   mqtt_topic_prefix: str
   mqtt_birth_topic: str
+  ai_provider: list(disabled|openai|llamacpp)
+  ai_base_url: str
+  ai_api_key: password
+  ai_model: str
+  ai_timeout_seconds: int(1,300)
+  ai_temperature: float
+  ai_refinement_enabled: bool
+  ai_suggestions_enabled: bool
