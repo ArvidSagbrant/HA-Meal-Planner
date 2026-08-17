@@ -7,6 +7,8 @@ def test_meal_crud(client: TestClient, meal_payload: dict) -> None:
     created = create_response.json()
     assert created["name"] == meal_payload["name"]
     assert created["tags"] == ["weekday", "family"]
+    assert created["protein_source"] == "halloumi"
+    assert created["is_vegetarian"] is True
 
     list_response = client.get("/api/meals")
     assert list_response.status_code == 200
@@ -14,11 +16,16 @@ def test_meal_crud(client: TestClient, meal_payload: dict) -> None:
 
     update_response = client.patch(
         f"/api/meals/{created['id']}",
-        json={"name": "Mushroom lasagne", "preference": 5},
+        json={
+            "name": "Mushroom lasagne",
+            "preference": 5,
+            "is_vegetarian": False,
+        },
     )
     assert update_response.status_code == 200
     assert update_response.json()["name"] == "Mushroom lasagne"
     assert update_response.json()["description"] == meal_payload["description"]
+    assert update_response.json()["is_vegetarian"] is False
 
     delete_response = client.delete(f"/api/meals/{created['id']}")
     assert delete_response.status_code == 204
@@ -37,6 +44,17 @@ def test_duplicate_meal_name_is_rejected_case_insensitively(
 
 def test_meal_validation_is_enforced(client: TestClient, meal_payload: dict) -> None:
     response = client.post("/api/meals", json={**meal_payload, "preference": 8})
+    assert response.status_code == 422
+
+
+def test_protein_source_must_be_from_catalog(
+    client: TestClient, meal_payload: dict
+) -> None:
+    response = client.post(
+        "/api/meals",
+        json={**meal_payload, "protein_source": "free text"},
+    )
+
     assert response.status_code == 422
 
 

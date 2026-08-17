@@ -37,9 +37,9 @@ class MealRepository:
                 """
                 INSERT INTO meals (
                     id, name, description, preference, cooking_effort, image_path,
-                    meal_type, protein_source, tags_json, nutrition_json, excluded,
-                    created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    meal_type, protein_source, is_vegetarian, tags_json,
+                    nutrition_json, excluded, created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     meal_id,
@@ -50,6 +50,7 @@ class MealRepository:
                     serialized["image_path"],
                     serialized["meal_type"],
                     serialized["protein_source"],
+                    serialized["is_vegetarian"],
                     serialized["tags_json"],
                     serialized["nutrition_json"],
                     serialized["excluded"],
@@ -91,7 +92,7 @@ class MealRepository:
                 """
                 UPDATE plan_entries
                 SET meal_id = NULL, assignment_type = 'manual', is_manual_override = 0,
-                    updated_at = ?
+                    is_cooked = 0, updated_at = ?
                 WHERE meal_id = ?
                 """,
                 (now, meal_id),
@@ -110,6 +111,8 @@ class MealRepository:
             )
         if "excluded" in result:
             result["excluded"] = int(result["excluded"])
+        if "is_vegetarian" in result:
+            result["is_vegetarian"] = int(result["is_vegetarian"])
         if not partial:
             result.setdefault("description", "")
             result.setdefault("preference", 3)
@@ -117,6 +120,7 @@ class MealRepository:
             result.setdefault("image_path", None)
             result.setdefault("meal_type", "dinner")
             result.setdefault("protein_source", "other")
+            result.setdefault("is_vegetarian", 0)
             result.setdefault("tags_json", "[]")
             result.setdefault("nutrition_json", "{}")
             result.setdefault("excluded", 0)
@@ -133,6 +137,7 @@ class MealRepository:
             "image_path": row["image_path"],
             "meal_type": row["meal_type"],
             "protein_source": row["protein_source"],
+            "is_vegetarian": bool(row["is_vegetarian"]),
             "tags": json.loads(row["tags_json"]),
             "nutrition": json.loads(row["nutrition_json"]),
             "excluded": bool(row["excluded"]),
@@ -177,7 +182,8 @@ class PlanRepository:
         with self.database.read() as connection:
             rows = connection.execute(
                 """
-                SELECT pe.meal_date, pe.meal_id, pe.assignment_type, pe.is_manual_override
+                SELECT pe.meal_date, pe.meal_id, pe.assignment_type,
+                       pe.is_manual_override, pe.is_cooked
                 FROM plan_entries pe
                 JOIN weekly_plans wp ON wp.id = pe.plan_id
                 WHERE wp.week_start = ?
@@ -193,7 +199,9 @@ class PlanRepository:
                 """
                 SELECT pe.meal_id, MAX(pe.meal_date) AS last_used
                 FROM plan_entries pe
-                WHERE pe.meal_id IS NOT NULL AND pe.meal_date < ?
+                WHERE pe.meal_id IS NOT NULL
+                  AND pe.is_cooked = 1
+                  AND pe.meal_date < ?
                 GROUP BY pe.meal_id
                 """,
                 (before_week_start.isoformat(),),
@@ -218,8 +226,9 @@ class PlanRepository:
                     """
                     UPDATE plan_entries
                     SET meal_id = ?, assignment_type = 'generated',
-                        is_manual_override = 0, updated_at = ?
-                    WHERE plan_id = ? AND meal_date = ? AND is_manual_override = 0
+                        is_manual_override = 0, is_cooked = 0, updated_at = ?
+                    WHERE plan_id = ? AND meal_date = ?
+                      AND is_manual_override = 0 AND is_cooked = 0
                     """,
                     (meal_id, now, plan_id, meal_date.isoformat()),
                 )
@@ -238,10 +247,10 @@ class PlanRepository:
                 """
                 UPDATE plan_entries
                 SET meal_id = ?, assignment_type = 'generated',
-                    is_manual_override = 0, updated_at = ?
+                    is_manual_override = 0, is_cooked = 0, updated_at = ?
                 WHERE plan_id = (
                     SELECT id FROM weekly_plans WHERE week_start = ?
-                ) AND meal_date = ? AND is_manual_override = 0
+                ) AND meal_date = ? AND is_manual_override = 0 AND is_cooked = 0
                 """,
                 (meal_id, now, week_start.isoformat(), meal_date.isoformat()),
             )
@@ -260,7 +269,7 @@ class PlanRepository:
                 """
                 UPDATE plan_entries
                 SET meal_id = ?, assignment_type = 'manual', is_manual_override = 1,
-                    updated_at = ?
+                    is_cooked = 0, updated_at = ?
                 WHERE plan_id = (
                     SELECT id FROM weekly_plans WHERE week_start = ?
                 ) AND meal_date = ?
@@ -282,13 +291,41 @@ class PlanRepository:
                 """
                 UPDATE plan_entries
                 SET meal_id = NULL, assignment_type = 'manual', is_manual_override = 0,
-                    updated_at = ?
+                    is_cooked = 0, updated_at = ?
                 WHERE plan_id = (
                     SELECT id FROM weekly_plans WHERE week_start = ?
                 ) AND meal_date = ?
                 """,
                 (now, week_start.isoformat(), meal_date.isoformat()),
             )
+            connection.execute(
+                "UPDATE weekly_plans SET updated_at = ? WHERE week_start = ?",
+                (now, week_start.isoformat()),
+            )
+
+    def set_cooked(
+        self, week_start: date, meal_date: date, is_cooked: bool
+    ) -> None:
+        self.ensure_week(week_start)
+        now = utc_now()
+        with self.database.transaction() as connection:
+            cursor = connection.execute(
+                """
+                UPDATE plan_entries
+                SET is_cooked = ?, updated_at = ?
+                WHERE plan_id = (
+                    SELECT id FROM weekly_plans WHERE week_start = ?
+                ) AND meal_date = ?
+                """,
+                (
+                    int(is_cooked),
+                    now,
+                    week_start.isoformat(),
+                    meal_date.isoformat(),
+                ),
+            )
+            if cursor.rowcount != 1:
+                raise RuntimeError("Expected exactly one plan day to be updated")
             connection.execute(
                 "UPDATE weekly_plans SET updated_at = ? WHERE week_start = ?",
                 (now, week_start.isoformat()),

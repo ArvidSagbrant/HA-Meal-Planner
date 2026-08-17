@@ -17,6 +17,10 @@ class DuplicateAssignmentError(ConflictError):
     pass
 
 
+class CookedDayError(ConflictError):
+    pass
+
+
 class InvalidOperationError(MealPlannerError):
     pass
 

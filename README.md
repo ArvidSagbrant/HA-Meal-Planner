@@ -3,7 +3,7 @@
 Meal Planner is a Home Assistant add-on for maintaining a meal database and
 building persistent weekly plans. It provides a responsive Ingress UI, meal
 CRUD, manual overrides, deterministic plan generation based on meal history and
-preferences, and English/Swedish localization.
+preferences, cooked-meal tracking, and English/Swedish localization.
 
 ## Install in Home Assistant
 
@@ -43,6 +43,7 @@ The API documentation is available at `/api/docs`. Important endpoints are:
 - `GET /api/plans/{monday}`
 - `POST /api/plans/{monday}/generate`
 - `PUT/DELETE /api/plans/{monday}/days/{date}`
+- `PATCH /api/plans/{monday}/days/{date}/cooked`
 - `POST /api/plans/{monday}/days/{date}/regenerate`
 
 See [SPECIFICATION.md](SPECIFICATION.md) for the complete product specification.

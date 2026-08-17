@@ -7,6 +7,8 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
+from .catalog import ProteinSource
+
 
 NonEmptyName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=120)]
 
@@ -18,7 +20,8 @@ class MealBase(BaseModel):
     cooking_effort: int = Field(default=3, ge=1, le=5)
     image_path: str | None = Field(default=None, max_length=500)
     meal_type: str = Field(default="dinner", min_length=1, max_length=80)
-    protein_source: str = Field(default="other", min_length=1, max_length=80)
+    protein_source: ProteinSource = ProteinSource.OTHER
+    is_vegetarian: bool = False
     tags: list[str] = Field(default_factory=list)
     nutrition: dict[str, float] = Field(default_factory=dict)
     excluded: bool = False
@@ -48,7 +51,8 @@ class MealUpdate(BaseModel):
     cooking_effort: int | None = Field(default=None, ge=1, le=5)
     image_path: str | None = Field(default=None, max_length=500)
     meal_type: str | None = Field(default=None, min_length=1, max_length=80)
-    protein_source: str | None = Field(default=None, min_length=1, max_length=80)
+    protein_source: ProteinSource | None = None
+    is_vegetarian: bool | None = None
     tags: list[str] | None = None
     nutrition: dict[str, float] | None = None
     excluded: bool | None = None
@@ -81,11 +85,16 @@ class PlanAssignmentRequest(BaseModel):
     meal_id: str = Field(min_length=1, max_length=64)
 
 
+class PlanCookedRequest(BaseModel):
+    is_cooked: bool
+
+
 class PlanDay(BaseModel):
     date: date
     meal: Meal | None
     assignment_type: str | None = None
     is_manual_override: bool = False
+    is_cooked: bool = False
 
 
 class WeeklyPlan(BaseModel):
@@ -108,4 +117,5 @@ class PlanningSettingsView(BaseModel):
 class RuntimeSettings(BaseModel):
     language: str
     log_level: str
+    protein_sources: list[ProteinSource]
     planning: PlanningSettingsView

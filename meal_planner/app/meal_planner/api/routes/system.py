@@ -5,6 +5,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
+from ...catalog import PROTEIN_SOURCES
 from ...container import Container
 from ...schemas import RuntimeSettings
 from ..dependencies import get_container
@@ -24,5 +25,6 @@ def runtime_settings(container: ContainerDependency) -> RuntimeSettings:
     return RuntimeSettings(
         language=container.settings.language,
         log_level=container.settings.log_level,
+        protein_sources=list(PROTEIN_SOURCES),
         planning=asdict(container.settings.planner),
     )

@@ -82,7 +82,7 @@
           </label>
           <label>
             <span data-i18n="meal.protein"></span>
-            <input id="meal-protein" value="other" maxlength="80" required>
+            <select id="meal-protein" required></select>
           </label>
           <label>
             <span data-i18n="meal.preference"></span>
@@ -103,10 +103,16 @@
           <span data-i18n="meal.tags"></span>
           <input id="meal-tags" data-i18n-placeholder="meal.tagsPlaceholder">
         </label>
-        <label class="checkbox-label">
-          <input id="meal-excluded" type="checkbox">
-          <span data-i18n="meal.excluded"></span>
-        </label>
+        <div class="checkbox-grid">
+          <label class="checkbox-label">
+            <input id="meal-vegetarian" type="checkbox">
+            <span data-i18n="meal.vegetarian"></span>
+          </label>
+          <label class="checkbox-label">
+            <input id="meal-excluded" type="checkbox">
+            <span data-i18n="meal.excluded"></span>
+          </label>
+        </div>
         <p class="form-error" id="form-error" role="alert"></p>
         <div class="dialog-actions">
           <button class="button" id="cancel-dialog" type="button" data-i18n="common.cancel"></button>

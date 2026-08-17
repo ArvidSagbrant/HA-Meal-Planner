@@ -10,7 +10,7 @@ def create_meals(
     client: TestClient, meal_payload: dict, count: int = 16
 ) -> list[dict]:
     meals = []
-    proteins = ["chicken", "fish", "vegetarian", "beef"]
+    proteins = ["poultry", "fish", "halloumi", "beef"]
     for index in range(count):
         payload = deepcopy(meal_payload)
         payload.update(
@@ -19,6 +19,7 @@ def create_meals(
                 "preference": 1 + (index % 5),
                 "cooking_effort": 1 + (index % 5),
                 "protein_source": proteins[index % len(proteins)],
+                "is_vegetarian": proteins[index % len(proteins)] == "halloumi",
                 "tags": [f"tag-{index % 3}"],
             }
         )
@@ -63,14 +64,24 @@ def test_generate_full_week_and_preserve_manual_override(
     )
 
 
-def test_previous_week_is_used_for_repeat_avoidance(
+def test_only_cooked_meals_are_used_for_repeat_avoidance(
     client: TestClient, meal_payload: dict
 ) -> None:
-    create_meals(client, meal_payload)
+    create_meals(client, meal_payload, count=8)
     first = client.post(f"/api/plans/{WEEK_START}/generate").json()
+    cooked_day = first["days"][0]
+    cooked_id = cooked_day["meal"]["id"]
+    response = client.patch(
+        f"/api/plans/{WEEK_START}/days/{cooked_day['date']}/cooked",
+        json={"is_cooked": True},
+    )
+    assert response.status_code == 200
     second = client.post("/api/plans/2026-08-24/generate").json()
 
-    assert set(assignments(first).values()).isdisjoint(assignments(second).values())
+    first_ids = set(assignments(first).values())
+    second_ids = set(assignments(second).values())
+    assert cooked_id not in second_ids
+    assert len((first_ids - {cooked_id}) & second_ids) == 6
 
 
 def test_regenerate_one_day_changes_only_that_day(
@@ -144,3 +155,69 @@ def test_manual_day_cannot_be_regenerated(
 
     assert response.status_code == 409
     assert response.json()["code"] == "PlanningError"
+
+
+def test_cooked_day_is_locked_and_preserved_during_week_regeneration(
+    client: TestClient, meal_payload: dict
+) -> None:
+    create_meals(client, meal_payload)
+    original = client.post(f"/api/plans/{WEEK_START}/generate").json()
+    target = original["days"][2]
+    target_id = target["meal"]["id"]
+    cooked_response = client.patch(
+        f"/api/plans/{WEEK_START}/days/{target['date']}/cooked",
+        json={"is_cooked": True},
+    )
+    assert cooked_response.status_code == 200
+    assert cooked_response.json()["days"][2]["is_cooked"] is True
+
+    regenerated = client.post(f"/api/plans/{WEEK_START}/generate").json()
+    assert regenerated["days"][2]["meal"]["id"] == target_id
+    assert regenerated["days"][2]["is_cooked"] is True
+
+    change_response = client.delete(
+        f"/api/plans/{WEEK_START}/days/{target['date']}"
+    )
+    regenerate_response = client.post(
+        f"/api/plans/{WEEK_START}/days/{target['date']}/regenerate"
+    )
+    assert change_response.status_code == 409
+    assert change_response.json()["code"] == "CookedDayError"
+    assert regenerate_response.status_code == 409
+    assert regenerate_response.json()["code"] == "CookedDayError"
+
+
+def test_cooked_mark_can_be_removed_before_editing(
+    client: TestClient, meal_payload: dict
+) -> None:
+    meal = create_meals(client, meal_payload, count=1)[0]
+    target = "2026-08-17"
+    client.put(
+        f"/api/plans/{WEEK_START}/days/{target}",
+        json={"meal_id": meal["id"]},
+    )
+    client.patch(
+        f"/api/plans/{WEEK_START}/days/{target}/cooked",
+        json={"is_cooked": True},
+    )
+
+    unmark = client.patch(
+        f"/api/plans/{WEEK_START}/days/{target}/cooked",
+        json={"is_cooked": False},
+    )
+    clear = client.delete(f"/api/plans/{WEEK_START}/days/{target}")
+
+    assert unmark.status_code == 200
+    assert unmark.json()["days"][0]["is_cooked"] is False
+    assert clear.status_code == 200
+    assert clear.json()["days"][0]["meal"] is None
+
+
+def test_empty_day_cannot_be_marked_cooked(client: TestClient) -> None:
+    response = client.patch(
+        f"/api/plans/{WEEK_START}/days/2026-08-17/cooked",
+        json={"is_cooked": True},
+    )
+
+    assert response.status_code == 409
+    assert response.json()["code"] == "CookedDayError"

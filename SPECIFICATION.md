@@ -20,7 +20,8 @@ Each meal should support at least:
 - Cooking effort
 - Image
 - Meal type/category
-- Protein/source category, e.g. beef, pork, chicken, fish, vegetarian
+- Protein/source category selected from a predefined localized list
+- Explicit vegetarian flag independent of protein/source category
 - Optional tags
 - Optional nutritional information
 
@@ -51,8 +52,10 @@ Users must be able to:
 - Regenerate one specific day
 - Manually select/override the meal for any day
 - Navigate previous and future weekly plans
+- Mark planned meals as cooked/executed
 
-Historical plans must be retained and used when generating future plans.
+Historical plans must be retained. Only meals marked as cooked/executed should
+be used as repeat-avoidance history when generating future plans.
 
 Planning constraints should be configurable where practical.
 

@@ -6,15 +6,6 @@ from dataclasses import dataclass, field
 from datetime import date
 
 
-VEGETARIAN_SOURCES = {
-    "plant",
-    "plant-based",
-    "plant_based",
-    "vegan",
-    "vegetarian",
-}
-
-
 class PlanningFailure(Exception):
     """Raised when no plan can satisfy all hard constraints."""
 
@@ -56,14 +47,9 @@ class MealCandidate:
     preference: int
     cooking_effort: int
     protein_source: str
+    is_vegetarian: bool = False
     tags: tuple[str, ...] = ()
     excluded: bool = False
-
-    @property
-    def is_vegetarian(self) -> bool:
-        source = self.protein_source.strip().casefold()
-        tags = {tag.strip().casefold() for tag in self.tags}
-        return source in VEGETARIAN_SOURCES or bool(tags & VEGETARIAN_SOURCES)
 
 
 @dataclass(frozen=True, slots=True)
@@ -71,6 +57,7 @@ class PlanSlot:
     date: date
     meal_id: str | None = None
     is_manual_override: bool = False
+    is_cooked: bool = False
 
 
 @dataclass(frozen=True, slots=True)

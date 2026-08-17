@@ -1,5 +1,5 @@
 name: Meal Planner
-version: "0.2.0"
+version: "0.2.1"
 slug: meal_planner
 description: Manage meals and plan a week from inside Home Assistant.
 url: https://github.com/ArvidSagbrant/HA-Meal-Planner

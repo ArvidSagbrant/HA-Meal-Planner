@@ -4,6 +4,7 @@ const state = {
   messages: {},
   meals: [],
   plan: null,
+  proteinSources: [],
   weekStart: mondayFor(new Date()),
 };
 
@@ -81,6 +82,7 @@ async function setLanguage(language) {
   elements.language.value = language;
   localStorage.setItem("meal-planner-language", language);
   translatePage();
+  renderProteinOptions();
   renderWeek();
   renderMeals();
 }
@@ -114,6 +116,22 @@ function localizedError(error) {
   return t("status.error");
 }
 
+function proteinLabel(source) {
+  return t(`proteinSources.${source}`);
+}
+
+function renderProteinOptions() {
+  const select = document.querySelector("#meal-protein");
+  const selected = select.value || "other";
+  select.replaceChildren();
+  state.proteinSources.forEach((source) => {
+    const option = element("option", "", proteinLabel(source));
+    option.value = source;
+    option.selected = source === selected;
+    select.append(option);
+  });
+}
+
 function renderWeek() {
   if (!state.plan) return;
   const locale = state.language === "sv" ? "sv-SE" : "en-GB";
@@ -131,6 +149,7 @@ function renderWeek() {
   state.plan.days.forEach((day, index) => {
     const card = element("article", "day-card");
     if (day.date === today) card.classList.add("day-card--today");
+    if (day.is_cooked) card.classList.add("day-card--cooked");
     card.append(
       element("p", "day-card__weekday", t(`days.${dayKeys[index]}`)),
       element(
@@ -152,6 +171,8 @@ function renderWeek() {
       select.append(option);
     });
     select.addEventListener("change", () => updateAssignment(day.date, select.value));
+    select.disabled = day.is_cooked;
+    select.dataset.locked = String(day.is_cooked);
     card.append(select);
     if (day.meal) {
       const footer = element("div", "day-card__footer");
@@ -162,7 +183,7 @@ function renderWeek() {
           t(day.is_manual_override ? "week.manual" : "week.generated"),
         ),
       );
-      if (!day.is_manual_override) {
+      if (!day.is_manual_override && !day.is_cooked) {
         const regenerateButton = element(
           "button",
           "button button--small",
@@ -173,6 +194,16 @@ function renderWeek() {
         footer.append(regenerateButton);
       }
       card.append(footer);
+
+      const cookedLabel = element("label", "checkbox-label day-card__cooked");
+      const cookedInput = element("input");
+      cookedInput.type = "checkbox";
+      cookedInput.checked = day.is_cooked;
+      cookedInput.addEventListener("change", () => {
+        setCooked(day.date, cookedInput.checked);
+      });
+      cookedLabel.append(cookedInput, element("span", "", t("week.cooked")));
+      card.append(cookedLabel);
     }
     elements.weekGrid.append(card);
   });
@@ -181,7 +212,7 @@ function renderWeek() {
 function renderMeals() {
   const query = elements.search.value.trim().toLocaleLowerCase(state.language);
   const meals = state.meals.filter((meal) =>
-    [meal.name, meal.description, meal.protein_source, ...meal.tags]
+    [meal.name, meal.description, proteinLabel(meal.protein_source), ...meal.tags]
       .join(" ")
       .toLocaleLowerCase(state.language)
       .includes(query),
@@ -200,10 +231,10 @@ function renderMeals() {
       element(
         "p",
         "",
-        t("meal.meta", {
+        t(meal.is_vegetarian ? "meal.metaVegetarian" : "meal.meta", {
           preference: meal.preference,
           effort: meal.cooking_effort,
-          protein: meal.protein_source,
+          protein: proteinLabel(meal.protein_source),
         }),
       ),
     );
@@ -270,11 +301,31 @@ async function regenerateDay(day) {
   }
 }
 
+async function setCooked(day, isCooked) {
+  setPlanningBusy(true);
+  try {
+    state.plan = await api(`plans/${state.plan.week_start}/days/${day}/cooked`, {
+      method: "PATCH",
+      body: JSON.stringify({ is_cooked: isCooked }),
+    });
+    renderWeek();
+    showToast(t(isCooked ? "status.cooked" : "status.notCooked"));
+  } catch (error) {
+    console.error(error);
+    showToast(localizedError(error));
+    await loadWeek();
+  } finally {
+    setPlanningBusy(false);
+  }
+}
+
 function setPlanningBusy(busy) {
   document
-    .querySelectorAll(".week-controls button, .week-grid button, .week-grid select")
+    .querySelectorAll(
+      ".week-controls button, .week-grid button, .week-grid select, .week-grid input",
+    )
     .forEach((control) => {
-      control.disabled = busy;
+      control.disabled = busy || control.dataset.locked === "true";
     });
 }
 
@@ -289,6 +340,7 @@ function openMealDialog(meal = null) {
   document.querySelector("#meal-preference").value = meal?.preference ?? 3;
   document.querySelector("#meal-effort").value = meal?.cooking_effort ?? 3;
   document.querySelector("#meal-tags").value = meal?.tags.join(", ") ?? "";
+  document.querySelector("#meal-vegetarian").checked = meal?.is_vegetarian ?? false;
   document.querySelector("#meal-excluded").checked = meal?.excluded ?? false;
   elements.dialogTitle.textContent = t(meal ? "meal.editTitle" : "meal.addTitle");
   elements.dialog.showModal();
@@ -303,6 +355,7 @@ async function saveMeal(event) {
     description: document.querySelector("#meal-description").value,
     meal_type: document.querySelector("#meal-type").value,
     protein_source: document.querySelector("#meal-protein").value,
+    is_vegetarian: document.querySelector("#meal-vegetarian").checked,
     preference: Number(document.querySelector("#meal-preference").value),
     cooking_effort: Number(document.querySelector("#meal-effort").value),
     tags: document.querySelector("#meal-tags").value.split(",").map((tag) => tag.trim()).filter(Boolean),
@@ -371,6 +424,7 @@ async function start() {
   bindEvents();
   try {
     const settings = await api("settings");
+    state.proteinSources = settings.protein_sources;
     const preferred = localStorage.getItem("meal-planner-language") || settings.language;
     await setLanguage(preferred);
     [state.meals, state.plan] = await Promise.all([

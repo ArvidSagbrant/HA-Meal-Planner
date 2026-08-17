@@ -22,8 +22,19 @@ meals, duplicates within a week, and meals used inside the repeat-avoidance
 window are hard constraints. Preference, recency, effort, protein/tag variety,
 and the vegetarian target are scored preferences.
 
+Protein/source is selected from a localized catalog: poultry, fish, beef, pork,
+lamb, seafood, eggs, halloumi, tofu, tempeh, quorn, legumes, or other. A meal's
+vegetarian status is controlled separately with the **Vegetarian** checkbox.
+
 Selecting a meal manually creates an override that is preserved when the week
 is generated again. Generated days can be regenerated individually without
 changing any other day. Use the arrow buttons to browse past and future weeks.
-Historical plans are retained and used by future generation. Data is stored in
-the add-on's `/data` directory and survives restarts and upgrades.
+Historical plans are retained, and their cooked entries are used by future
+generation. Data is stored in the add-on's `/data` directory and survives
+restarts and upgrades.
+
+Mark a planned day as **Cooked** after the meal was actually prepared. Only
+cooked meals are included in repeat-avoidance history, so skipped or replaced
+plans do not prevent those meals from being selected later. A cooked day is
+locked against assignment changes and regeneration; unmark it first to edit the
+day.
