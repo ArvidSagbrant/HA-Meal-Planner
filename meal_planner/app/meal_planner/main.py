@@ -16,6 +16,7 @@ from .api.routes import meals, plans, system
 from .config import Settings
 from .container import Container
 from .errors import ConflictError, InvalidOperationError, MealPlannerError, NotFoundError
+from .middleware import NormalizeIngressPathMiddleware
 
 
 LOGGER = logging.getLogger(__name__)
@@ -44,6 +45,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         openapi_url="/api/openapi.json",
     )
     application.state.container = container
+    application.add_middleware(NormalizeIngressPathMiddleware)
 
     @application.middleware("http")
     async def enforce_ingress_source(request: Request, call_next):
