@@ -98,6 +98,7 @@ def state_messages(
                     "description": meal.description,
                     "is_vegetarian": meal.is_vegetarian,
                     "meal_type": meal.meal_type,
+                    "nutrition": meal.nutrition.model_dump(exclude_none=True),
                     "preference": meal.preference,
                     "protein_source": meal.protein_source,
                     "tags": meal.tags,

@@ -13,6 +13,13 @@ Meal Planner opens from the Home Assistant sidebar through Ingress.
 - `recency_weight`: preference for meals that have not been used recently.
 - `effort_weight`: influence of weekday and weekend cooking-effort targets.
 - `variety_weight`: influence of protein, tag, and vegetarian variety.
+- `nutrition_weight`: influence of known energy, protein, fibre, and adjacent
+  nutritional variety (`0` ignores nutrition during generation).
+- `calorie_target_kcal`: preferred energy per serving; `0` disables the calorie
+  target while retaining other known nutrition scoring.
+- `max_consecutive_protein_source`: hard limit for generated meals using the
+  same protein/source on consecutive days (`7` disables the limit). Manual and
+  cooked assignments remain preserved.
 - `weekday_effort_target`: preferred weekday cooking effort from 1 to 5.
 - `weekend_effort_target`: preferred weekend cooking effort from 1 to 5.
 - `mqtt_mode`: `auto` uses the MQTT service supplied by Home Assistant
@@ -44,13 +51,22 @@ Meal Planner opens from the Home Assistant sidebar through Ingress.
 
 Add at least seven eligible meals, then select **Generate week**. Generation is
 deterministic for the same meals, settings, history, and existing plan. Excluded
-meals, duplicates within a week, and meals used inside the repeat-avoidance
-window are hard constraints. Preference, recency, effort, protein/tag variety,
-and the vegetarian target are scored preferences.
+meals, duplicates within a week, meals used inside the repeat-avoidance window,
+and the configured consecutive protein/source maximum are hard constraints.
+Preference, recency, effort, protein/tag variety, nutrition, and the vegetarian
+target are scored preferences. The deterministic search can backtrack when a
+locally best choice would prevent a complete valid week.
 
 Protein/source is selected from a localized catalog: poultry, fish, beef, pork,
 lamb, seafood, eggs, halloumi, tofu, tempeh, quorn, legumes, or other. A meal's
 vegetarian status is controlled separately with the **Vegetarian** checkbox.
+Optional nutrition fields are per serving: energy, protein, carbohydrates, fat,
+and fibre. Missing values are allowed and are never guessed by the deterministic
+planner.
+
+Meal images can be uploaded from the editor in PNG, JPEG, GIF, or WebP format,
+up to 5 MB. They are stored under `/data/images`, included in the meal browser
+and weekly view, and removed automatically when their meal is deleted.
 
 Selecting a meal manually creates an override that is preserved when the week
 is generated again. Generated days can be regenerated individually without
@@ -75,7 +91,8 @@ stable IDs:
 
 Their state is the planned meal name, or a localized message when no meal is
 planned. Attributes include the date, meal ID, assignment type, cooked/manual
-flags, protein source, vegetarian status, tags, preference, and cooking effort.
+flags, protein source, vegetarian status, tags, preference, cooking effort, and
+known nutrition.
 The add-on republishes both entities after meal or plan changes and whenever
 Home Assistant announces that it has restarted.
 
@@ -90,8 +107,9 @@ there are no duplicates. Only a proposal that passes every check is saved.
 
 Provider timeouts, connection failures, malformed JSON, unknown IDs, and rule
 violations are logged without secrets and cause the deterministic candidate to
-be used. The add-on therefore remains fully usable when AI is disabled or
-temporarily unavailable.
+be used. For rejected HTTP requests, a bounded structured error message from
+the provider is logged when available. The add-on therefore remains fully
+usable when AI is disabled or temporarily unavailable.
 
 Select **Suggest meals** above the meal database to request new ideas. A
 suggestion is never saved automatically: **Review and add** first opens the

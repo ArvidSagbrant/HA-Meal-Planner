@@ -43,7 +43,6 @@ class DeterministicPlanner:
 
         assignments = dict(fixed_assignments)
         used_ids = set(assignments.values())
-        scores: dict[date, float] = {}
         open_dates = sorted(expected_dates - assignments.keys())
         eligible_count = sum(
             self.constraints.can_generate(
@@ -59,23 +58,21 @@ class DeterministicPlanner:
                 "Not enough eligible meals to fill the week without repeats"
             )
 
+        scores: dict[date, float] = {}
         previous_assignments = previous_assignments or {}
-        for meal_date in open_dates:
-            ranked = self._rank_candidates(
-                meals=meals,
-                meal_date=meal_date,
-                week_start=week_start,
-                assignments=assignments,
-                meals_by_id=meals_by_id,
-                history=history,
-                previous_meal_id=previous_assignments.get(meal_date),
-            )
-            if not ranked:
-                raise PlanningFailure("No meal satisfies the hard constraints")
-            score, selected = ranked[0]
-            assignments[meal_date] = selected.id
-            used_ids.add(selected.id)
-            scores[meal_date] = score
+        if not self._fill_open_dates(
+            open_dates=open_dates,
+            index=0,
+            meals=meals,
+            week_start=week_start,
+            assignments=assignments,
+            meals_by_id=meals_by_id,
+            history=history,
+            previous_assignments=previous_assignments,
+            scores=scores,
+            dead_states=set(),
+        ):
+            raise PlanningFailure("No complete plan satisfies the hard constraints")
 
         self.constraints.validate_complete_week(assignments, meals_by_id, expected_dates)
         return PlanningResult(assignments=assignments, scores=scores)
@@ -148,17 +145,19 @@ class DeterministicPlanner:
         if any(assignments.get(day) != meal_id for day, meal_id in fixed_assignments.items()):
             raise PlanningFailure("The proposed plan changed a fixed assignment")
 
-        used_ids = set(fixed_assignments.values())
+        accepted_assignments = dict(fixed_assignments)
         for meal_date in sorted(expected_dates - fixed_assignments.keys()):
             meal = meals_by_id[assignments[meal_date]]
-            if not self.constraints.can_generate(
+            if not self.constraints.can_assign(
                 meal,
+                meal_date=meal_date,
                 week_start=week_start,
-                used_meal_ids=used_ids,
+                assignments=accepted_assignments,
+                meals_by_id=meals_by_id,
                 history=history,
             ):
                 raise PlanningFailure("The proposed plan violates a hard constraint")
-            used_ids.add(meal.id)
+            accepted_assignments[meal_date] = meal.id
 
     def _rank_candidates(
         self,
@@ -172,15 +171,16 @@ class DeterministicPlanner:
         previous_meal_id: str | None,
         excluded_meal_id: str | None = None,
     ) -> list[tuple[float, MealCandidate]]:
-        used_ids = set(assignments.values())
         ranked = []
         for meal in meals:
             if meal.id == excluded_meal_id:
                 continue
-            if not self.constraints.can_generate(
+            if not self.constraints.can_assign(
                 meal,
+                meal_date=meal_date,
                 week_start=week_start,
-                used_meal_ids=used_ids,
+                assignments=assignments,
+                meals_by_id=meals_by_id,
                 history=history,
             ):
                 continue
@@ -195,6 +195,62 @@ class DeterministicPlanner:
             ranked.append((score, meal))
         ranked.sort(key=lambda item: (-item[0], item[1].name.casefold(), item[1].id))
         return ranked
+
+    def _fill_open_dates(
+        self,
+        *,
+        open_dates: list[date],
+        index: int,
+        meals: list[MealCandidate],
+        week_start: date,
+        assignments: dict[date, str],
+        meals_by_id: dict[str, MealCandidate],
+        history: PlanningHistory,
+        previous_assignments: dict[date, str],
+        scores: dict[date, float],
+        dead_states: set[tuple[tuple[str, str], ...]],
+    ) -> bool:
+        if index == len(open_dates):
+            return True
+        state_key = tuple(
+            (
+                assigned_date.isoformat(),
+                meal_id,
+            )
+            for assigned_date, meal_id in sorted(assignments.items())
+        )
+        if state_key in dead_states:
+            return False
+        meal_date = open_dates[index]
+        ranked = self._rank_candidates(
+            meals=meals,
+            meal_date=meal_date,
+            week_start=week_start,
+            assignments=assignments,
+            meals_by_id=meals_by_id,
+            history=history,
+            previous_meal_id=previous_assignments.get(meal_date),
+        )
+        for score, selected in ranked:
+            assignments[meal_date] = selected.id
+            scores[meal_date] = score
+            if self._fill_open_dates(
+                open_dates=open_dates,
+                index=index + 1,
+                meals=meals,
+                week_start=week_start,
+                assignments=assignments,
+                meals_by_id=meals_by_id,
+                history=history,
+                previous_assignments=previous_assignments,
+                scores=scores,
+                dead_states=dead_states,
+            ):
+                return True
+            assignments.pop(meal_date)
+            scores.pop(meal_date)
+        dead_states.add(state_key)
+        return False
 
     @staticmethod
     def _expected_dates(week_start: date) -> set[date]:

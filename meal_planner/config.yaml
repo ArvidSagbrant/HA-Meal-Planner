@@ -1,5 +1,5 @@
 name: Meal Planner
-version: "0.4.0"
+version: "0.5.0"
 slug: meal_planner
 description: Manage meals and plan a week from inside Home Assistant.
 url: https://github.com/ArvidSagbrant/HA-Meal-Planner
@@ -25,6 +25,9 @@ options:
   recency_weight: 1.0
   effort_weight: 0.6
   variety_weight: 1.0
+  nutrition_weight: 0.5
+  calorie_target_kcal: 600
+  max_consecutive_protein_source: 7
   weekday_effort_target: 2
   weekend_effort_target: 4
   mqtt_mode: auto
@@ -53,6 +56,9 @@ schema:
   recency_weight: float
   effort_weight: float
   variety_weight: float
+  nutrition_weight: float
+  calorie_target_kcal: int(0,5000)
+  max_consecutive_protein_source: int(1,7)
   weekday_effort_target: int(1,5)
   weekend_effort_target: int(1,5)
   mqtt_mode: list(auto|external|disabled)

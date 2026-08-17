@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+import re
 from typing import Protocol, TypeVar
 
 import httpx
@@ -11,6 +13,7 @@ from ..config import AISettings
 
 
 StructuredModel = TypeVar("StructuredModel", bound=BaseModel)
+LOGGER = logging.getLogger(__name__)
 
 
 class AIProviderError(Exception):
@@ -85,8 +88,18 @@ class HTTPAIProvider:
         except httpx.TimeoutException as error:
             raise AIProviderError("AI request timed out") from error
         except httpx.HTTPStatusError as error:
+            detail = self._error_detail(error.response)
+            message = f"AI provider returned HTTP {error.response.status_code}"
+            if detail:
+                message = f"{message}: {detail}"
+            LOGGER.warning(
+                "AI provider %s returned HTTP %s%s",
+                self.name,
+                error.response.status_code,
+                f": {detail}" if detail else "",
+            )
             raise AIProviderError(
-                f"AI provider returned HTTP {error.response.status_code}"
+                message
             ) from error
         except httpx.HTTPError as error:
             raise AIProviderError("AI provider could not be reached") from error
@@ -115,6 +128,28 @@ class HTTPAIProvider:
 
     def _extract_content(self, payload: dict) -> str:
         raise NotImplementedError
+
+    @staticmethod
+    def _error_detail(response: httpx.Response) -> str | None:
+        try:
+            payload = response.json()
+        except ValueError:
+            return None
+        if not isinstance(payload, dict):
+            return None
+        detail: object = payload.get("error", payload.get("detail"))
+        if isinstance(detail, dict):
+            detail = detail.get("message", detail.get("detail", detail.get("type")))
+        if not isinstance(detail, str):
+            return None
+        sanitized = " ".join(detail.split())
+        sanitized = re.sub(
+            r"(?i)\b(api[_ -]?key|token|password)(\s*[:=]\s*)\S+",
+            r"\1\2[redacted]",
+            sanitized,
+        )
+        sanitized = re.sub(r"\bsk-[A-Za-z0-9_-]{8,}\b", "[redacted]", sanitized)
+        return sanitized[:300] or None
 
 
 class OpenAIResponsesProvider(HTTPAIProvider):

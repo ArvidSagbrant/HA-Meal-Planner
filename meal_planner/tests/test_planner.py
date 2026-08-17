@@ -23,6 +23,7 @@ def meal(
     protein: str = "other",
     vegetarian: bool = False,
     excluded: bool = False,
+    nutrition: dict[str, float] | None = None,
 ) -> MealCandidate:
     return MealCandidate(
         id=f"meal-{index}",
@@ -32,6 +33,7 @@ def meal(
         protein_source=protein,
         is_vegetarian=vegetarian,
         tags=(),
+        nutrition=nutrition or {},
         excluded=excluded,
     )
 
@@ -208,3 +210,66 @@ def test_manual_day_cannot_be_regenerated() -> None:
             slots=slots,
             history=PlanningHistory(),
         )
+
+
+def test_maximum_consecutive_protein_source_is_a_hard_constraint() -> None:
+    meals = [meal(index, protein="poultry", preference=5) for index in range(4)]
+    meals += [meal(index + 10, protein="fish") for index in range(3)]
+
+    result = DeterministicPlanner(
+        PlannerSettings(
+            repeat_avoidance_weeks=0,
+            vegetarian_target=0,
+            variety_weight=0,
+            max_consecutive_protein_source=2,
+        )
+    ).generate_week(
+        week_start=WEEK_START,
+        meals=meals,
+        slots=empty_slots(),
+        history=PlanningHistory(),
+    )
+
+    by_id = {candidate.id: candidate for candidate in meals}
+    sources = [
+        by_id[result.assignments[WEEK_START + timedelta(days=offset)]].protein_source
+        for offset in range(7)
+    ]
+    assert all(
+        len(set(sources[index : index + 3])) > 1
+        for index in range(len(sources) - 2)
+    )
+
+
+def test_nutrition_score_prefers_configured_calorie_target() -> None:
+    meals = [meal(index) for index in range(7)]
+    meals += [
+        meal(
+            10,
+            nutrition={"calories_kcal": 600, "protein_g": 25, "fiber_g": 8},
+        ),
+        meal(
+            11,
+            nutrition={"calories_kcal": 1400, "protein_g": 5, "fiber_g": 1},
+        ),
+    ]
+
+    result = DeterministicPlanner(
+        PlannerSettings(
+            repeat_avoidance_weeks=0,
+            vegetarian_target=0,
+            preference_weight=0,
+            recency_weight=0,
+            effort_weight=0,
+            variety_weight=0,
+            nutrition_weight=1,
+            calorie_target_kcal=600,
+        )
+    ).generate_week(
+        week_start=WEEK_START,
+        meals=meals,
+        slots=empty_slots(),
+        history=PlanningHistory(),
+    )
+
+    assert result.assignments[WEEK_START] == "meal-10"

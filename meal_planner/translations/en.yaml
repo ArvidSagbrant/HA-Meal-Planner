@@ -23,6 +23,15 @@ configuration:
   variety_weight:
     name: Variety weight
     description: Influence of protein, tag, and vegetarian variety.
+  nutrition_weight:
+    name: Nutrition weight
+    description: Influence of known calorie, protein, fibre, and nutrition variety values.
+  calorie_target_kcal:
+    name: Calorie target
+    description: Preferred energy per serving in kcal; set to 0 to disable the target.
+  max_consecutive_protein_source:
+    name: Maximum consecutive protein source
+    description: Hard limit for consecutive generated meals with the same protein/source; 7 disables it.
   weekday_effort_target:
     name: Weekday effort target
     description: Preferred cooking effort from 1 to 5 on weekdays.

@@ -195,6 +195,7 @@ class AIService:
                 "spread vegetarian meals",
                 "avoid consecutive high-effort meals",
                 "prefer highly rated meals",
+                "maintain nutritional variety when values are available",
             ],
             "fixed_assignments": fixed,
             "current_plan": {
@@ -210,6 +211,7 @@ class AIService:
                     "protein_source": meal.protein_source,
                     "is_vegetarian": meal.is_vegetarian,
                     "tags": list(meal.tags),
+                    "nutrition": meal.nutrition,
                 }
                 for meal in candidates
             ],

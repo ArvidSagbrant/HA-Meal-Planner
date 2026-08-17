@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#2f6d57">
     <title>Meal Planner</title>
-    <link rel="stylesheet" href="./styles.css">
-    <script type="module" src="./app.js"></script>
+    <link rel="icon" href="./favicon.svg?v=0.5.0" type="image/svg+xml">
+    <link rel="stylesheet" href="./styles.css?v=0.5.0">
+    <script type="module" src="./app.js?v=0.5.0"></script>
   </head>
   <body>
     <header class="topbar">
@@ -82,6 +83,17 @@
           <span data-i18n="meal.description"></span>
           <textarea id="meal-description" rows="3" maxlength="4000"></textarea>
         </label>
+        <div class="image-editor">
+          <img id="meal-image-preview" class="image-editor__preview" alt="" hidden>
+          <div class="image-editor__controls">
+            <label>
+              <span data-i18n="meal.image"></span>
+              <input id="meal-image" type="file" accept="image/png,image/jpeg,image/gif,image/webp">
+            </label>
+            <p class="field-help" data-i18n="meal.imageHelp"></p>
+            <button class="button button--danger" id="remove-meal-image" type="button" data-i18n="meal.removeImage" hidden></button>
+          </div>
+        </div>
         <div class="form-grid">
           <label>
             <span data-i18n="meal.type"></span>
@@ -110,6 +122,32 @@
           <span data-i18n="meal.tags"></span>
           <input id="meal-tags" data-i18n-placeholder="meal.tagsPlaceholder">
         </label>
+        <fieldset class="nutrition-fields">
+          <legend data-i18n="nutrition.title"></legend>
+          <p class="field-help" data-i18n="nutrition.help"></p>
+          <div class="form-grid nutrition-fields__grid">
+            <label>
+              <span data-i18n="nutrition.calories"></span>
+              <input id="nutrition-calories" type="number" min="0" max="10000" step="1" inputmode="decimal">
+            </label>
+            <label>
+              <span data-i18n="nutrition.protein"></span>
+              <input id="nutrition-protein" type="number" min="0" max="1000" step="0.1" inputmode="decimal">
+            </label>
+            <label>
+              <span data-i18n="nutrition.carbohydrates"></span>
+              <input id="nutrition-carbohydrates" type="number" min="0" max="1000" step="0.1" inputmode="decimal">
+            </label>
+            <label>
+              <span data-i18n="nutrition.fat"></span>
+              <input id="nutrition-fat" type="number" min="0" max="1000" step="0.1" inputmode="decimal">
+            </label>
+            <label>
+              <span data-i18n="nutrition.fiber"></span>
+              <input id="nutrition-fiber" type="number" min="0" max="1000" step="0.1" inputmode="decimal">
+            </label>
+          </div>
+        </fieldset>
         <div class="checkbox-grid">
           <label class="checkbox-label">
             <input id="meal-vegetarian" type="checkbox">

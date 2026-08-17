@@ -27,6 +27,36 @@ class HardConstraints:
         cutoff = week_start - timedelta(weeks=self.settings.repeat_avoidance_weeks)
         return last_used is None or last_used < cutoff or last_used >= week_start
 
+    def can_assign(
+        self,
+        meal: MealCandidate,
+        *,
+        meal_date: date,
+        week_start: date,
+        assignments: dict[date, str],
+        meals_by_id: dict[str, MealCandidate],
+        history: PlanningHistory,
+    ) -> bool:
+        if not self.can_generate(
+            meal,
+            week_start=week_start,
+            used_meal_ids=set(assignments.values()),
+            history=history,
+        ):
+            return False
+        maximum = self.settings.max_consecutive_protein_source
+        source = meal.protein_source.casefold()
+        run_length = 1
+        for direction in (-1, 1):
+            neighbor_date = meal_date + timedelta(days=direction)
+            while assignments.get(neighbor_date):
+                neighbor = meals_by_id[assignments[neighbor_date]]
+                if neighbor.protein_source.casefold() != source:
+                    break
+                run_length += 1
+                neighbor_date += timedelta(days=direction)
+        return run_length <= maximum
+
     @staticmethod
     def validate_fixed_assignments(
         assignments: dict[date, str], meals_by_id: dict[str, MealCandidate]
