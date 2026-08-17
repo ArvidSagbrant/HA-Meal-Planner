@@ -122,6 +122,44 @@ class DeterministicPlanner:
         score, selected = ranked[0]
         return selected.id, score
 
+    def validate_plan(
+        self,
+        *,
+        week_start: date,
+        assignments: dict[date, str],
+        meals: list[MealCandidate],
+        slots: list[PlanSlot],
+        history: PlanningHistory,
+    ) -> None:
+        """Validate a complete external proposal against every hard constraint."""
+        expected_dates = self._expected_dates(week_start)
+        self._validate_slots(slots, expected_dates)
+        meals_by_id = {meal.id: meal for meal in meals}
+        self.constraints.validate_complete_week(
+            assignments,
+            meals_by_id,
+            expected_dates,
+        )
+        fixed_assignments = {
+            slot.date: slot.meal_id
+            for slot in slots
+            if (slot.is_manual_override or slot.is_cooked) and slot.meal_id is not None
+        }
+        if any(assignments.get(day) != meal_id for day, meal_id in fixed_assignments.items()):
+            raise PlanningFailure("The proposed plan changed a fixed assignment")
+
+        used_ids = set(fixed_assignments.values())
+        for meal_date in sorted(expected_dates - fixed_assignments.keys()):
+            meal = meals_by_id[assignments[meal_date]]
+            if not self.constraints.can_generate(
+                meal,
+                week_start=week_start,
+                used_meal_ids=used_ids,
+                history=history,
+            ):
+                raise PlanningFailure("The proposed plan violates a hard constraint")
+            used_ids.add(meal.id)
+
     def _rank_candidates(
         self,
         *,

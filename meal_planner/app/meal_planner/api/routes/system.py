@@ -36,6 +36,28 @@ def runtime_settings(container: ContainerDependency) -> RuntimeSettings:
             "discovery_prefix": container.settings.mqtt.discovery_prefix,
             "topic_prefix": container.settings.mqtt.topic_prefix,
         },
+        ai={
+            "enabled": container.settings.ai.enabled,
+            "provider": container.settings.ai.provider,
+            "base_url": (
+                container.settings.ai.base_url
+                if container.settings.ai.enabled
+                else None
+            ),
+            "model": (
+                container.settings.ai.model if container.settings.ai.enabled else None
+            ),
+            "timeout_seconds": container.settings.ai.timeout_seconds,
+            "temperature": container.settings.ai.temperature,
+            "refinement_enabled": (
+                container.settings.ai.enabled
+                and container.settings.ai.refinement_enabled
+            ),
+            "suggestions_enabled": (
+                container.settings.ai.enabled
+                and container.settings.ai.suggestions_enabled
+            ),
+        },
     )
 
 

@@ -12,10 +12,11 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import __version__
-from .api.routes import meals, plans, system
+from .api.routes import ai, meals, plans, system
 from .config import Settings
 from .container import Container
 from .errors import (
+    AIUnavailableError,
     ConflictError,
     InvalidOperationError,
     MealPlannerError,
@@ -45,6 +46,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             yield
         finally:
             container.mqtt.stop()
+            container.ai.close()
             LOGGER.info("Meal Planner stopped")
 
     application = FastAPI(
@@ -69,6 +71,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return await call_next(request)
 
     application.include_router(system.router, prefix="/api")
+    application.include_router(ai.router, prefix="/api")
     application.include_router(meals.router, prefix="/api")
     application.include_router(plans.router, prefix="/api")
 
@@ -82,6 +85,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             status_code = status.HTTP_409_CONFLICT
         elif isinstance(error, InvalidOperationError):
             status_code = status.HTTP_400_BAD_REQUEST
+        elif isinstance(error, AIUnavailableError):
+            status_code = status.HTTP_503_SERVICE_UNAVAILABLE
         else:
             status_code = status.HTTP_400_BAD_REQUEST
         return JSONResponse(

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0
+
+- Add optional OpenAI Responses API and llama.cpp-compatible AI providers.
+- Refine deterministic weekly plans with strictly validated structured output.
+- Reject unknown meal IDs, fixed-assignment changes, and hard-constraint violations.
+- Fall back to the deterministic plan on provider, timeout, or validation failures.
+- Add localized, review-before-save AI meal suggestions.
+- Add non-secret AI runtime status and configurable provider parameters.
+
 ## 0.3.0
 
 - Add automatic Supervisor MQTT broker discovery and external broker settings.

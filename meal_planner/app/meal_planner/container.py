@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 
+from .ai import AIService, build_ai_provider
 from .config import Settings
 from .database import Database
 from .events import ChangeNotifier
@@ -19,6 +20,7 @@ class Container:
     changes: ChangeNotifier
     meals: MealService
     plans: PlanService
+    ai: AIService
     mqtt: MqttIntegration
 
     @classmethod
@@ -29,11 +31,19 @@ class Container:
         planner = DeterministicPlanner(settings.planner)
         changes = ChangeNotifier()
         meals = MealService(meal_repository, changes.notify)
+        ai = AIService(
+            settings.ai,
+            build_ai_provider(settings.ai),
+            planner,
+            meal_repository,
+            settings.language,
+        )
         plans = PlanService(
             plan_repository,
             meal_repository,
             planner,
-            changes.notify,
+            ai=ai,
+            on_change=changes.notify,
         )
         mqtt = MqttIntegration(settings.mqtt, plans, settings.language)
         changes.subscribe(mqtt.publish_state)
@@ -43,5 +53,6 @@ class Container:
             changes=changes,
             meals=meals,
             plans=plans,
+            ai=ai,
             mqtt=mqtt,
         )

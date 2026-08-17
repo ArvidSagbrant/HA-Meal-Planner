@@ -55,10 +55,13 @@
             <p class="eyebrow" data-i18n="meals.eyebrow"></p>
             <h2 id="meals-heading" data-i18n="meals.title"></h2>
           </div>
-          <label class="search-field">
-            <span class="sr-only" data-i18n="meals.search"></span>
-            <input id="meal-search" type="search" data-i18n-placeholder="meals.search">
-          </label>
+          <div class="meal-section__actions">
+            <button class="button" id="suggest-meals" type="button" data-i18n="ai.suggest"></button>
+            <label class="search-field">
+              <span class="sr-only" data-i18n="meals.search"></span>
+              <input id="meal-search" type="search" data-i18n-placeholder="meals.search">
+            </label>
+          </div>
         </div>
         <div class="meal-list" id="meal-list" aria-live="polite"></div>
       </section>
@@ -123,6 +126,38 @@
           <button class="button button--primary" type="submit" data-i18n="common.save"></button>
         </div>
       </form>
+    </dialog>
+
+    <dialog id="suggestions-dialog">
+      <div class="suggestions-dialog__content">
+        <div class="dialog-heading">
+          <div>
+            <p class="eyebrow" data-i18n="ai.eyebrow"></p>
+            <h2 data-i18n="ai.title"></h2>
+          </div>
+          <button class="icon-button" id="close-suggestions" type="button" data-i18n-title="common.close">×</button>
+        </div>
+        <p class="suggestions-dialog__intro" data-i18n="ai.description"></p>
+        <div class="suggestion-controls">
+          <label>
+            <span data-i18n="ai.preferences"></span>
+            <input id="suggestion-preferences" maxlength="500" data-i18n-placeholder="ai.preferencesPlaceholder">
+          </label>
+          <label>
+            <span data-i18n="ai.count"></span>
+            <select id="suggestion-count">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3" selected>3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+            </select>
+          </label>
+          <button class="button button--primary" id="generate-suggestions" type="button" data-i18n="ai.generate"></button>
+        </div>
+        <p class="form-error" id="suggestions-error" role="alert"></p>
+        <div class="suggestion-list" id="suggestion-list" aria-live="polite"></div>
+      </div>
     </dialog>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>

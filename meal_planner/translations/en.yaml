@@ -56,3 +56,27 @@ configuration:
   mqtt_birth_topic:
     name: Home Assistant birth topic
     description: Topic used to detect Home Assistant restarts and republish discovery.
+  ai_provider:
+    name: AI provider
+    description: Disable AI, use OpenAI, or connect to a llama.cpp OpenAI-compatible server.
+  ai_base_url:
+    name: AI base URL
+    description: API URL ending in /v1. Leave empty to use the selected provider's default.
+  ai_api_key:
+    name: AI API key
+    description: Required for OpenAI and optional for compatible local servers.
+  ai_model:
+    name: AI model
+    description: Model identifier exposed by the selected provider.
+  ai_timeout_seconds:
+    name: AI timeout
+    description: Maximum seconds allowed for each AI request.
+  ai_temperature:
+    name: AI temperature
+    description: Sampling temperature from 0 to 2 for compatible local providers.
+  ai_refinement_enabled:
+    name: Refine generated plans
+    description: Let AI propose improvements after deterministic generation and before validation.
+  ai_suggestions_enabled:
+    name: Meal suggestions
+    description: Allow AI to suggest new meals without adding them automatically.

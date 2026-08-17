@@ -31,6 +31,21 @@ export MEAL_PLANNER_VARIETY_WEIGHT="$(read_option 'variety_weight' '1.0')"
 export MEAL_PLANNER_WEEKDAY_EFFORT_TARGET="$(read_option 'weekday_effort_target' '2')"
 export MEAL_PLANNER_WEEKEND_EFFORT_TARGET="$(read_option 'weekend_effort_target' '4')"
 
+export MEAL_PLANNER_AI_PROVIDER="$(read_option 'ai_provider' 'disabled')"
+export MEAL_PLANNER_AI_BASE_URL="$(read_option 'ai_base_url' '')"
+export MEAL_PLANNER_AI_API_KEY="$(read_option 'ai_api_key' '')"
+export MEAL_PLANNER_AI_MODEL="$(read_option 'ai_model' 'gpt-5-mini')"
+export MEAL_PLANNER_AI_TIMEOUT_SECONDS="$(read_option 'ai_timeout_seconds' '30')"
+export MEAL_PLANNER_AI_TEMPERATURE="$(read_option 'ai_temperature' '0.2')"
+export MEAL_PLANNER_AI_REFINEMENT_ENABLED="$(read_option 'ai_refinement_enabled' 'true')"
+export MEAL_PLANNER_AI_SUGGESTIONS_ENABLED="$(read_option 'ai_suggestions_enabled' 'true')"
+
+if [[ "${MEAL_PLANNER_AI_PROVIDER}" == "openai" && -z "${MEAL_PLANNER_AI_BASE_URL}" ]]; then
+    export MEAL_PLANNER_AI_BASE_URL="https://api.openai.com/v1"
+elif [[ "${MEAL_PLANNER_AI_PROVIDER}" == "llamacpp" && -z "${MEAL_PLANNER_AI_BASE_URL}" ]]; then
+    export MEAL_PLANNER_AI_BASE_URL="http://localhost:8080/v1"
+fi
+
 export MEAL_PLANNER_MQTT_MODE="$(read_option 'mqtt_mode' 'auto')"
 export MEAL_PLANNER_MQTT_DISCOVERY_PREFIX="$(read_option 'mqtt_discovery_prefix' 'homeassistant')"
 export MEAL_PLANNER_MQTT_TOPIC_PREFIX="$(read_option 'mqtt_topic_prefix' 'meal_planner')"

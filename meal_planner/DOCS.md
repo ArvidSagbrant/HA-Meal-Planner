@@ -27,6 +27,20 @@ Meal Planner opens from the Home Assistant sidebar through Ingress.
   `meal_planner`).
 - `mqtt_birth_topic`: Home Assistant birth topic used to republish discovery
   and current state after a restart (normally `homeassistant/status`).
+- `ai_provider`: `disabled` (default), `openai`, or `llamacpp`.
+- `ai_base_url`: API base URL ending in `/v1`. Leave empty for
+  `https://api.openai.com/v1` with OpenAI or `http://localhost:8080/v1` with
+  llama.cpp. A llama.cpp server on another host must use an address reachable
+  from the add-on container.
+- `ai_api_key`: required for OpenAI and optional for a protected compatible
+  server. It is treated as a secret and is never returned by the runtime API.
+- `ai_model`: provider-specific model identifier.
+- `ai_timeout_seconds`: request timeout from 1 to 300 seconds.
+- `ai_temperature`: sampling temperature from 0 to 2 for compatible local
+  providers. OpenAI model controls use provider defaults for broad model
+  compatibility.
+- `ai_refinement_enabled`: allow AI refinement after deterministic generation.
+- `ai_suggestions_enabled`: show the AI meal-suggestion action.
 
 Add at least seven eligible meals, then select **Generate week**. Generation is
 deterministic for the same meals, settings, history, and existing plan. Excluded
@@ -64,3 +78,21 @@ planned. Attributes include the date, meal ID, assignment type, cooked/manual
 flags, protein source, vegetarian status, tags, preference, and cooking effort.
 The add-on republishes both entities after meal or plan changes and whenever
 Home Assistant announces that it has restarted.
+
+## Optional AI assistance
+
+AI is disabled by default. When enabled, weekly generation always starts with
+the deterministic planner. The provider receives a bounded catalog of valid
+meal IDs and may propose a complete alternative week. The backend then checks
+that all seven dates exist, all meal IDs are known, manual and cooked entries
+are unchanged, repeat avoidance is respected, excluded meals are not used, and
+there are no duplicates. Only a proposal that passes every check is saved.
+
+Provider timeouts, connection failures, malformed JSON, unknown IDs, and rule
+violations are logged without secrets and cause the deterministic candidate to
+be used. The add-on therefore remains fully usable when AI is disabled or
+temporarily unavailable.
+
+Select **Suggest meals** above the meal database to request new ideas. A
+suggestion is never saved automatically: **Review and add** first opens the
+normal meal editor so every field can be checked or changed.

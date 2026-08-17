@@ -7,6 +7,7 @@ from .models import (
     PlannerSettings,
     PlanningFailure,
     PlanningHistory,
+    PlanningResult,
 )
 
 __all__ = [
@@ -16,4 +17,5 @@ __all__ = [
     "PlannerSettings",
     "PlanningFailure",
     "PlanningHistory",
+    "PlanningResult",
 ]
