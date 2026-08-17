@@ -34,14 +34,14 @@ class DeterministicPlanner:
         expected_dates = self._expected_dates(week_start)
         self._validate_slots(slots, expected_dates)
         meals_by_id = {meal.id: meal for meal in meals}
-        manual_assignments = {
+        fixed_assignments = {
             slot.date: slot.meal_id
             for slot in slots
-            if slot.is_manual_override and slot.meal_id is not None
+            if (slot.is_manual_override or slot.is_cooked) and slot.meal_id is not None
         }
-        self.constraints.validate_manual_assignments(manual_assignments, meals_by_id)
+        self.constraints.validate_fixed_assignments(fixed_assignments, meals_by_id)
 
-        assignments = dict(manual_assignments)
+        assignments = dict(fixed_assignments)
         used_ids = set(assignments.values())
         scores: dict[date, float] = {}
         open_dates = sorted(expected_dates - assignments.keys())
@@ -95,6 +95,8 @@ class DeterministicPlanner:
             raise PlanningFailure("The requested day is outside the selected week")
 
         target_slot = next(slot for slot in slots if slot.date == meal_date)
+        if target_slot.is_cooked:
+            raise PlanningFailure("A cooked day cannot be regenerated")
         if target_slot.is_manual_override:
             raise PlanningFailure("Clear the manual override before regenerating this day")
 
@@ -104,7 +106,7 @@ class DeterministicPlanner:
             for slot in slots
             if slot.date != meal_date and slot.meal_id is not None
         }
-        self.constraints.validate_manual_assignments(assignments, meals_by_id)
+        self.constraints.validate_fixed_assignments(assignments, meals_by_id)
         ranked = self._rank_candidates(
             meals=meals,
             meal_date=meal_date,

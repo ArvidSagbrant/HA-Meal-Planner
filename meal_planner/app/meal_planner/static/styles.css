@@ -102,6 +102,7 @@ section {
 }
 
 .day-card--today { outline: 2px solid var(--primary); outline-offset: 2px; }
+.day-card--cooked { background: color-mix(in srgb, var(--primary) 9%, var(--surface)); }
 .day-card__weekday { font-size: .78rem; font-weight: 800; text-transform: uppercase; color: var(--primary); }
 .day-card__date { margin: 3px 0 18px; color: var(--text-muted); font-size: .86rem; }
 .day-card select { width: 100%; }
@@ -113,8 +114,9 @@ section {
   margin-top: 10px;
 }
 .day-card__status { color: var(--text-muted); font-size: .72rem; font-weight: 700; }
+.day-card__cooked { margin-top: 12px; color: var(--text-muted); font-size: .78rem; font-weight: 700; }
 .button--small { min-height: 34px; padding: 6px 9px; font-size: .76rem; }
-button:disabled, select:disabled { cursor: wait; opacity: .58; }
+button:disabled, select:disabled { cursor: not-allowed; opacity: .58; }
 
 .meal-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .meal-card {
@@ -159,6 +161,7 @@ dialog::backdrop { background: rgb(14 25 20 / 52%); backdrop-filter: blur(3px); 
 .dialog-heading { display: flex; align-items: center; justify-content: space-between; }
 .dialog-actions { justify-content: flex-end; }
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.checkbox-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .checkbox-label { display: flex; gap: 10px; align-items: center; }
 .checkbox-label input { width: auto; }
 .checkbox-label span { margin: 0 !important; }
@@ -193,7 +196,7 @@ dialog::backdrop { background: rgb(14 25 20 / 52%); backdrop-filter: blur(3px); 
   .topbar__actions { justify-content: space-between; }
   .week-navigation { display: grid; grid-template-columns: 42px 1fr 42px; }
   .week-controls { align-items: stretch; flex-direction: column; }
-  .meal-list, .week-grid, .form-grid { grid-template-columns: 1fr; }
+  .meal-list, .week-grid, .form-grid, .checkbox-grid { grid-template-columns: 1fr; }
   .day-card:last-child { grid-column: auto; }
   .meal-card { align-items: flex-start; flex-direction: column; }
   .meal-card__actions { width: 100%; }

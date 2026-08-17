@@ -5,7 +5,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from ...schemas import PlanAssignmentRequest, WeeklyPlan
+from ...schemas import PlanAssignmentRequest, PlanCookedRequest, WeeklyPlan
 from ...services.plans import PlanService
 from ..dependencies import get_plan_service
 
@@ -39,6 +39,16 @@ def clear_meal(
     week_start: date, meal_date: date, service: PlanServiceDependency
 ) -> WeeklyPlan:
     return service.clear_meal(week_start, meal_date)
+
+
+@router.patch("/{week_start}/days/{meal_date}/cooked", response_model=WeeklyPlan)
+def set_cooked(
+    week_start: date,
+    meal_date: date,
+    payload: PlanCookedRequest,
+    service: PlanServiceDependency,
+) -> WeeklyPlan:
+    return service.set_cooked(week_start, meal_date, payload.is_cooked)
 
 
 @router.post("/{week_start}/days/{meal_date}/regenerate", response_model=WeeklyPlan)

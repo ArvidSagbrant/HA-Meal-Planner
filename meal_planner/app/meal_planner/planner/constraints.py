@@ -28,7 +28,7 @@ class HardConstraints:
         return last_used is None or last_used < cutoff or last_used >= week_start
 
     @staticmethod
-    def validate_manual_assignments(
+    def validate_fixed_assignments(
         assignments: dict[date, str], meals_by_id: dict[str, MealCandidate]
     ) -> None:
         unknown_ids = sorted(set(assignments.values()) - meals_by_id.keys())

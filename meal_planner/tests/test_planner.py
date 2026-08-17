@@ -21,6 +21,7 @@ def meal(
     preference: int = 3,
     effort: int = 2,
     protein: str = "other",
+    vegetarian: bool = False,
     excluded: bool = False,
 ) -> MealCandidate:
     return MealCandidate(
@@ -29,6 +30,7 @@ def meal(
         preference=preference,
         cooking_effort=effort,
         protein_source=protein,
+        is_vegetarian=vegetarian,
         tags=(),
         excluded=excluded,
     )
@@ -127,8 +129,14 @@ def test_preference_and_effort_influence_selection() -> None:
 
 
 def test_vegetarian_target_is_met_when_candidates_are_available() -> None:
+    assert meal(9, protein="halloumi").is_vegetarian is False
     meals = [meal(index, protein="meat") for index in range(7)]
-    meals.extend([meal(10, protein="vegetarian"), meal(11, protein="plant")])
+    meals.extend(
+        [
+            meal(10, protein="halloumi", vegetarian=True),
+            meal(11, protein="legumes", vegetarian=True),
+        ]
+    )
 
     result = DeterministicPlanner(
         PlannerSettings(

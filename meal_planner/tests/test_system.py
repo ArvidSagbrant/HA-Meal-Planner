@@ -9,6 +9,21 @@ def test_health_and_settings(client: TestClient) -> None:
     assert client.get("/api/settings").json() == {
         "language": "en",
         "log_level": "ERROR",
+        "protein_sources": [
+            "poultry",
+            "fish",
+            "beef",
+            "pork",
+            "lamb",
+            "seafood",
+            "eggs",
+            "halloumi",
+            "tofu",
+            "tempeh",
+            "quorn",
+            "legumes",
+            "other",
+        ],
         "planning": {
             "repeat_avoidance_weeks": 2,
             "vegetarian_target": 2,
@@ -26,6 +41,20 @@ def test_frontend_is_served(client: TestClient) -> None:
     response = client.get("/")
     assert response.status_code == 200
     assert "data-i18n=\"app.title\"" in response.text
+    assert '<select id="meal-protein"' in response.text
+    assert 'id="meal-vegetarian"' in response.text
+
+
+def test_protein_catalog_and_cooked_label_are_localized(
+    client: TestClient,
+) -> None:
+    english = client.get("/locales/en.json").json()
+    swedish = client.get("/locales/sv.json").json()
+
+    assert english["proteinSources"]["poultry"] == "Poultry"
+    assert swedish["proteinSources"]["poultry"] == "Fågel"
+    assert english["week"]["cooked"] == "Cooked"
+    assert swedish["week"]["cooked"] == "Tillagad"
 
 
 def test_ingress_double_slash_reaches_api(

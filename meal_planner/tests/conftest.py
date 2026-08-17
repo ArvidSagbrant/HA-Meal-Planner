@@ -28,8 +28,8 @@ def meal_payload() -> dict:
         "preference": 4,
         "cooking_effort": 3,
         "meal_type": "dinner",
-        "protein_source": "vegetarian",
+        "protein_source": "halloumi",
+        "is_vegetarian": True,
         "tags": ["weekday", "family"],
         "nutrition": {"protein_g": 24},
     }
-

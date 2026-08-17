@@ -7,8 +7,10 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
+from .catalog import infer_legacy_vegetarian, normalize_legacy_protein_source
 
-SCHEMA_VERSION = 1
+
+SCHEMA_VERSION = 2
 
 
 class Database:
@@ -29,6 +31,9 @@ class Database:
             if current_version == 0:
                 self._create_schema(connection)
                 connection.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
+            elif current_version < 2:
+                self._migrate_v1_to_v2(connection)
+                connection.execute("PRAGMA user_version = 2")
 
     def connect(self) -> sqlite3.Connection:
         connection = sqlite3.connect(self.path, timeout=10)
@@ -72,6 +77,7 @@ class Database:
                 image_path TEXT,
                 meal_type TEXT NOT NULL DEFAULT 'dinner',
                 protein_source TEXT NOT NULL DEFAULT 'other',
+                is_vegetarian INTEGER NOT NULL DEFAULT 0 CHECK (is_vegetarian IN (0, 1)),
                 tags_json TEXT NOT NULL DEFAULT '[]',
                 nutrition_json TEXT NOT NULL DEFAULT '{}',
                 excluded INTEGER NOT NULL DEFAULT 0 CHECK (excluded IN (0, 1)),
@@ -93,6 +99,7 @@ class Database:
                 meal_id TEXT REFERENCES meals(id) ON DELETE SET NULL,
                 assignment_type TEXT NOT NULL DEFAULT 'manual',
                 is_manual_override INTEGER NOT NULL DEFAULT 1 CHECK (is_manual_override IN (0, 1)),
+                is_cooked INTEGER NOT NULL DEFAULT 0 CHECK (is_cooked IN (0, 1)),
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL,
                 UNIQUE (plan_id, meal_date)
@@ -102,3 +109,37 @@ class Database:
             CREATE INDEX idx_plan_entries_meal_date ON plan_entries(meal_date);
             """
         )
+
+    @staticmethod
+    def _migrate_v1_to_v2(connection: sqlite3.Connection) -> None:
+        connection.execute(
+            """
+            ALTER TABLE meals
+            ADD COLUMN is_vegetarian INTEGER NOT NULL DEFAULT 0
+            CHECK (is_vegetarian IN (0, 1))
+            """
+        )
+        connection.execute(
+            """
+            ALTER TABLE plan_entries
+            ADD COLUMN is_cooked INTEGER NOT NULL DEFAULT 0
+            CHECK (is_cooked IN (0, 1))
+            """
+        )
+        rows = connection.execute(
+            "SELECT id, protein_source FROM meals"
+        ).fetchall()
+        for row in rows:
+            source = row["protein_source"]
+            connection.execute(
+                """
+                UPDATE meals
+                SET protein_source = ?, is_vegetarian = ?
+                WHERE id = ?
+                """,
+                (
+                    normalize_legacy_protein_source(source).value,
+                    int(infer_legacy_vegetarian(source)),
+                    row["id"],
+                ),
+            )

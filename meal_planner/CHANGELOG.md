@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.1
+
+- Replace free-text protein/source values with a localized predefined catalog.
+- Add an explicit vegetarian property to meals.
+- Add cooked-day tracking and use only cooked meals for repeat history.
+- Preserve and lock cooked plan entries until they are unmarked.
+- Migrate existing Swedish and English protein/source values automatically.
+
 ## 0.2.0
 
 - Add deterministic, score-based full-week generation.

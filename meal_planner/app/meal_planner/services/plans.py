@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import date, timedelta
 
 from ..errors import (
+    CookedDayError,
     DuplicateAssignmentError,
     InvalidOperationError,
     NotFoundError,
@@ -43,6 +44,7 @@ class PlanService:
                     meal=Meal.model_validate(meal_data) if meal_data else None,
                     assignment_type=item["assignment_type"] if item["meal_id"] else None,
                     is_manual_override=bool(item["is_manual_override"]),
+                    is_cooked=bool(item["is_cooked"]),
                 )
             )
         return WeeklyPlan(
@@ -55,10 +57,12 @@ class PlanService:
         self._validate_day(week_start, meal_date)
         if self.meals.get(meal_id) is None:
             raise NotFoundError("Meal not found")
+        day_data = self.plans.get_days(week_start)
+        self._require_editable_day(day_data, meal_date)
         duplicate_day = next(
             (
                 item["meal_date"]
-                for item in self.plans.get_days(week_start)
+                for item in day_data
                 if item["meal_id"] == meal_id
                 and item["meal_date"] != meal_date.isoformat()
             ),
@@ -73,7 +77,18 @@ class PlanService:
 
     def clear_meal(self, week_start: date, meal_date: date) -> WeeklyPlan:
         self._validate_day(week_start, meal_date)
+        self._require_editable_day(self.plans.get_days(week_start), meal_date)
         self.plans.clear(week_start, meal_date)
+        return self.get_week(week_start)
+
+    def set_cooked(
+        self, week_start: date, meal_date: date, is_cooked: bool
+    ) -> WeeklyPlan:
+        self._validate_day(week_start, meal_date)
+        day = self._get_plan_day(self.plans.get_days(week_start), meal_date)
+        if is_cooked and day["meal_id"] is None:
+            raise CookedDayError("Select a meal before marking the day as cooked")
+        self.plans.set_cooked(week_start, meal_date, is_cooked)
         return self.get_week(week_start)
 
     def generate_week(self, week_start: date) -> WeeklyPlan:
@@ -101,6 +116,7 @@ class PlanService:
         self._validate_day(week_start, meal_date)
         meal_data = self.meals.list()
         day_data = self.plans.get_days(week_start)
+        self._require_editable_day(day_data, meal_date)
         try:
             meal_id, _score = self.planner.regenerate_day(
                 week_start=week_start,
@@ -123,6 +139,7 @@ class PlanService:
                 preference=item["preference"],
                 cooking_effort=item["cooking_effort"],
                 protein_source=item["protein_source"],
+                is_vegetarian=item["is_vegetarian"],
                 tags=tuple(item["tags"]),
                 excluded=item["excluded"],
             )
@@ -136,6 +153,7 @@ class PlanService:
                 date=date.fromisoformat(item["meal_date"]),
                 meal_id=item["meal_id"],
                 is_manual_override=bool(item["is_manual_override"]),
+                is_cooked=bool(item["is_cooked"]),
             )
             for item in items
         ]
@@ -150,3 +168,12 @@ class PlanService:
         cls._validate_week_start(week_start)
         if not week_start <= meal_date <= week_start + timedelta(days=6):
             raise InvalidOperationError("meal_date must be within the requested week")
+
+    @staticmethod
+    def _get_plan_day(items: list[dict], meal_date: date) -> dict:
+        return next(item for item in items if item["meal_date"] == meal_date.isoformat())
+
+    @classmethod
+    def _require_editable_day(cls, items: list[dict], meal_date: date) -> None:
+        if cls._get_plan_day(items, meal_date)["is_cooked"]:
+            raise CookedDayError("Unmark the cooked day before changing its meal")
