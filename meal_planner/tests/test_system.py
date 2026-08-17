@@ -34,6 +34,21 @@ def test_health_and_settings(client: TestClient) -> None:
             "weekday_effort_target": 2,
             "weekend_effort_target": 4,
         },
+        "mqtt": {
+            "enabled": False,
+            "mode": "disabled",
+            "broker": None,
+            "tls": False,
+            "discovery_prefix": "homeassistant",
+            "topic_prefix": "meal_planner",
+        },
+    }
+    assert client.get("/api/mqtt/status").json() == {
+        "enabled": False,
+        "connected": False,
+        "mode": "disabled",
+        "broker": None,
+        "last_error": None,
     }
 
 
@@ -43,6 +58,7 @@ def test_frontend_is_served(client: TestClient) -> None:
     assert "data-i18n=\"app.title\"" in response.text
     assert '<select id="meal-protein"' in response.text
     assert 'id="meal-vegetarian"' in response.text
+    assert 'id="mqtt-status"' in response.text
 
 
 def test_protein_catalog_and_cooked_label_are_localized(

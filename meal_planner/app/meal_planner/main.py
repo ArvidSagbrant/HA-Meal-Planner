@@ -39,9 +39,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             format="%(asctime)s %(levelname)s %(name)s: %(message)s",
         )
         container.database.initialize()
+        container.mqtt.start()
         LOGGER.info("Meal Planner %s started", __version__)
-        yield
-        LOGGER.info("Meal Planner stopped")
+        try:
+            yield
+        finally:
+            container.mqtt.stop()
+            LOGGER.info("Meal Planner stopped")
 
     application = FastAPI(
         title="Meal Planner API",

@@ -114,8 +114,26 @@ class PlanningSettingsView(BaseModel):
     weekend_effort_target: int
 
 
+class MqttSettingsView(BaseModel):
+    enabled: bool
+    mode: str
+    broker: str | None
+    tls: bool
+    discovery_prefix: str
+    topic_prefix: str
+
+
+class MqttStatusView(BaseModel):
+    enabled: bool
+    connected: bool
+    mode: str
+    broker: str | None
+    last_error: str | None
+
+
 class RuntimeSettings(BaseModel):
     language: str
     log_level: str
     protein_sources: list[ProteinSource]
     planning: PlanningSettingsView
+    mqtt: MqttSettingsView

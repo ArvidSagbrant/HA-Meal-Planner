@@ -1,6 +1,6 @@
 FROM ghcr.io/home-assistant/base-python:3.12-alpine3.24 AS runtime
 
-ARG BUILD_VERSION=0.2.1
+ARG BUILD_VERSION=0.3.0
 ARG BUILD_ARCH=amd64
 
 LABEL \
@@ -24,6 +24,7 @@ COPY app /app
 FROM runtime AS test
 COPY requirements-dev.txt /tmp/requirements-dev.txt
 RUN pip3 install --no-cache-dir -r /tmp/requirements-dev.txt
+COPY config.yaml run.sh /addon/
 COPY tests /tests
 ENV PYTHONPATH=/app
 RUN pytest -q /tests

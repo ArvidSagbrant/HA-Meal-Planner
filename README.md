@@ -45,5 +45,10 @@ The API documentation is available at `/api/docs`. Important endpoints are:
 - `PUT/DELETE /api/plans/{monday}/days/{date}`
 - `PATCH /api/plans/{monday}/days/{date}/cooked`
 - `POST /api/plans/{monday}/days/{date}/regenerate`
+- `GET /api/mqtt/status`
+
+The add-on automatically uses Home Assistant's Supervisor-provided MQTT service
+when available. MQTT Discovery creates stable today and tomorrow sensors; an
+external broker or disabled MQTT can be selected in the add-on configuration.
 
 See [SPECIFICATION.md](SPECIFICATION.md) for the complete product specification.

@@ -1,5 +1,5 @@
 name: Meal Planner
-version: "0.2.1"
+version: "0.3.0"
 slug: meal_planner
 description: Manage meals and plan a week from inside Home Assistant.
 url: https://github.com/ArvidSagbrant/HA-Meal-Planner
@@ -13,6 +13,9 @@ ingress: true
 ingress_port: 8099
 panel_icon: mdi:food-apple
 panel_title: Meal Planner
+panel_admin: false
+services:
+  - mqtt:want
 options:
   language: en
   log_level: INFO
@@ -24,6 +27,15 @@ options:
   variety_weight: 1.0
   weekday_effort_target: 2
   weekend_effort_target: 4
+  mqtt_mode: auto
+  mqtt_host: ""
+  mqtt_port: 1883
+  mqtt_username: ""
+  mqtt_password: ""
+  mqtt_tls: false
+  mqtt_discovery_prefix: homeassistant
+  mqtt_topic_prefix: meal_planner
+  mqtt_birth_topic: homeassistant/status
 schema:
   language: list(en|sv)
   log_level: list(DEBUG|INFO|WARNING|ERROR)
@@ -35,3 +47,12 @@ schema:
   variety_weight: float
   weekday_effort_target: int(1,5)
   weekend_effort_target: int(1,5)
+  mqtt_mode: list(auto|external|disabled)
+  mqtt_host: str
+  mqtt_port: port
+  mqtt_username: str
+  mqtt_password: password
+  mqtt_tls: bool
+  mqtt_discovery_prefix: str
+  mqtt_topic_prefix: str
+  mqtt_birth_topic: str

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0
+
+- Add automatic Supervisor MQTT broker discovery and external broker settings.
+- Publish stable today and tomorrow sensors through Home Assistant MQTT Discovery.
+- Republish current entity state after plan changes and Home Assistant restarts.
+- Show localized MQTT connection status in the Ingress interface.
+- Allow non-admin Home Assistant users to open the Ingress panel.
+
 ## 0.2.1
 
 - Replace free-text protein/source values with a localized predefined catalog.

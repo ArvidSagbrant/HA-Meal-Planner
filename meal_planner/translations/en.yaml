@@ -29,3 +29,30 @@ configuration:
   weekend_effort_target:
     name: Weekend effort target
     description: Preferred cooking effort from 1 to 5 on weekends.
+  mqtt_mode:
+    name: MQTT broker
+    description: Use the Supervisor broker automatically, configure an external broker, or disable MQTT.
+  mqtt_host:
+    name: External MQTT host
+    description: Host name or IP address used in external mode.
+  mqtt_port:
+    name: External MQTT port
+    description: Broker port used in external mode.
+  mqtt_username:
+    name: External MQTT username
+    description: Optional broker username used in external mode.
+  mqtt_password:
+    name: External MQTT password
+    description: Optional broker password used in external mode.
+  mqtt_tls:
+    name: External MQTT TLS
+    description: Enable TLS for the external broker connection.
+  mqtt_discovery_prefix:
+    name: MQTT Discovery prefix
+    description: Home Assistant MQTT Discovery prefix.
+  mqtt_topic_prefix:
+    name: MQTT topic prefix
+    description: Base topic for Meal Planner availability and entity state.
+  mqtt_birth_topic:
+    name: Home Assistant birth topic
+    description: Topic used to detect Home Assistant restarts and republish discovery.

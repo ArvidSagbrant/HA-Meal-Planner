@@ -3,6 +3,7 @@ const state = {
   language: "en",
   messages: {},
   meals: [],
+  mqttStatus: null,
   plan: null,
   proteinSources: [],
   weekStart: mondayFor(new Date()),
@@ -20,6 +21,8 @@ const elements = {
   formError: document.querySelector("#form-error"),
   toast: document.querySelector("#toast"),
   generateWeek: document.querySelector("#generate-week"),
+  mqttStatus: document.querySelector("#mqtt-status"),
+  mqttStatusText: document.querySelector("#mqtt-status-text"),
 };
 
 function mondayFor(value) {
@@ -85,6 +88,7 @@ async function setLanguage(language) {
   renderProteinOptions();
   renderWeek();
   renderMeals();
+  renderMqttStatus();
 }
 
 function translatePage() {
@@ -130,6 +134,31 @@ function renderProteinOptions() {
     option.selected = source === selected;
     select.append(option);
   });
+}
+
+function renderMqttStatus() {
+  const status = state.mqttStatus;
+  let kind = "connecting";
+  if (status && !status.enabled) kind = "disabled";
+  else if (status?.connected) kind = "connected";
+  else if (status?.last_error) kind = "error";
+  elements.mqttStatus.dataset.state = kind;
+  elements.mqttStatusText.textContent = t(`mqtt.${kind}`);
+  elements.mqttStatus.title = status?.last_error || status?.broker || "";
+}
+
+async function loadMqttStatus() {
+  try {
+    state.mqttStatus = await api("mqtt/status");
+  } catch (error) {
+    console.error(error);
+    state.mqttStatus = {
+      enabled: true,
+      connected: false,
+      last_error: t("mqtt.unavailable"),
+    };
+  }
+  renderMqttStatus();
 }
 
 function renderWeek() {
@@ -430,6 +459,7 @@ async function start() {
     [state.meals, state.plan] = await Promise.all([
       api("meals"),
       api(`plans/${dateKey(state.weekStart)}`),
+      loadMqttStatus(),
     ]);
     renderMeals();
     renderWeek();
@@ -441,3 +471,4 @@ async function start() {
 }
 
 start();
+window.setInterval(loadMqttStatus, 10000);
