@@ -18,6 +18,21 @@ def test_frontend_is_served(client: TestClient) -> None:
     assert "data-i18n=\"app.title\"" in response.text
 
 
+def test_ingress_double_slash_reaches_api(
+    client: TestClient, meal_payload: dict
+) -> None:
+    settings_response = client.get("http://testserver//api/settings")
+    create_response = client.post(
+        "http://testserver//api/meals",
+        json=meal_payload,
+    )
+
+    assert settings_response.status_code == 200
+    assert settings_response.json()["language"] == "en"
+    assert create_response.status_code == 201
+    assert create_response.json()["name"] == meal_payload["name"]
+
+
 def test_ingress_only_mode_rejects_other_network_clients(tmp_path) -> None:
     app = create_app(
         Settings(
